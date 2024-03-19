@@ -21,6 +21,7 @@ For each listener type, there are multiple execution options determining how the
 
 ## Todo
 
+* Add tests
 * Fix up docstrings across the board
 * Add an interface for fork_type
 * Add support for async execution within an existing event loop
