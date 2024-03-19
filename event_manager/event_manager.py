@@ -2,17 +2,26 @@
 EventManager project providing an internal event processing system.
 """
 
+__all__ = ["EventManager"]
+
 import collections
 import fnmatch
+import logging
+from collections.abc import Callable
 from datetime import timedelta
-from typing import Callable
+from multiprocessing import Process
+from threading import Thread
 
-import loguru
 from pydantic import BaseModel
 
-from .listeners import BatchListener, Listener, ScheduledListener
+from event_manager.listeners.base import BaseListener
+from event_manager.listeners.batch import BatchListener
+from event_manager.listeners.scheduled import ScheduledListener
+from event_manager.listeners.simple import Listener
+from event_manager.queues.base import QueueInterface
+from event_manager.queues.memory import ProcessQueue, ThreadQueue
 
-logger = loguru.logger.bind(name="magenta")
+logger = logging.getLogger("event_manager")
 
 
 class EventManager:
@@ -28,48 +37,91 @@ class EventManager:
         self._event_tree = Tree(wildcard=wildcard)
 
         # flat list of listeners triggerd on "any" event
-        self._any_listeners: list[Listener] = []
+        self._any_listeners: list[BaseListener] = []
         self._scheduled_listeners: list[ScheduledListener] = []
 
-    def on(self, event: str, func: Callable[[BaseModel], None] | None = None) -> Callable:
+    def on(
+        self,
+        event: list[str] | str,
+        batch: bool = False,
+        batch_window: int = 30,
+        func: Callable | None = None,
+        fork_type: type[Thread | Process] = Process,
+        queue_type: type[QueueInterface] = ProcessQueue,
+    ) -> Callable:
         """
         Registeres a listener on an event. Provided function will be called when a matching event emits.
         """
+        if not event:
+            logger.error("No event provided to register listener on.")
+            raise Exception("No event provided to register listener on.")
 
-        def on(func: Callable[[BaseModel], None]) -> Callable[[BaseModel], None]:
-            logger.info(f"Registered function {func.__name__} to run on {event} event.")
-            self._event_tree.add_listener(Listener(func=func, event=event))
+        if isinstance(event, str):
+            event = [event]
+
+        def _on(func: Callable) -> Callable[[BaseModel], None]:
+            for e in event:
+                logger.info(f"Registered function {func.__name__} to run on {e} event.")
+                if batch:
+                    # Fix the queue type if set incorrectly with known queue types
+                    _queue_type = queue_type
+                    if fork_type == Thread and queue_type == ProcessQueue:
+                        logger.warning(
+                            "Threaded batch listeners do not support ProcessQueues, defaulting to ThreadQueue."
+                        )
+                        _queue_type = ThreadQueue
+                    elif fork_type == Process and queue_type == ThreadQueue:
+                        logger.warning(
+                            "Process batch listeners do not support ThreadQueues, defaulting to ProcessQueue."
+                        )
+                        _queue_type = ProcessQueue
+
+                    self._event_tree.add_listener(
+                        BatchListener(
+                            event=e,
+                            batch_window=batch_window,
+                            func=func,
+                            fork_type=fork_type,
+                            queue_type=_queue_type,
+                        )
+                    )
+                else:
+                    self._event_tree.add_listener(Listener(func=func, event=e, fork_type=fork_type))
+
             return func
 
-        return on(func) if func else on
+        return _on(func) if func else _on
 
-    def on_any(self, func: Callable[[BaseModel], None] | None = None) -> Callable:
+    def on_any(
+        self,
+        batch: bool = False,
+        batch_window: int = 30,
+        func: Callable | None = None,
+        fork_type: type[Thread | Process] = Process,
+        queue_type: type[QueueInterface] = ProcessQueue,
+    ) -> Callable:
         """
         Registers a function that listens to all events. Function will be run on all events in the system.
         """
 
-        def on_any(func: Callable[[BaseModel], None]) -> Callable[[BaseModel], None]:
+        def _on_any(func: Callable) -> Callable:
             logger.info(f"Registered function {func.__name__} to run on ANY event.")
-            self._any_listeners.append(Listener(func=func, event="*"))
+            if batch:
+                self._event_tree.add_listener(
+                    BatchListener(
+                        event="*",
+                        batch_window=batch_window,
+                        func=func,
+                        fork_type=fork_type,
+                        queue_type=queue_type,
+                    )
+                )
+            else:
+                self._event_tree.add_listener(Listener(func=func, event="*", fork_type=fork_type))
+
             return func
 
-        return on_any(func) if func else on_any
-
-    def on_batch(self, event: str, batch_window: int = 30, func: Callable[[BaseModel], None] | None = None) -> Callable:
-        """
-        Registers a function that will be run in a thread with a queue used to send data to it whenever the event emits.
-        """
-
-        def on_batch(func: Callable[[BaseModel], None]) -> Callable[[BaseModel], None]:
-            logger.info(
-                f"Registered function {func.__name__} to run on {event} event "
-                f"with data batched in a {batch_window} second window."
-            )
-            listener = BatchListener(event=event, batch_window=batch_window, func=func)
-            self._event_tree.add_listener(listener)
-            return func
-
-        return on_batch(func) if func else on_batch
+        return _on_any(func) if func else _on_any
 
     def schedule(self, interval: timedelta, func: Callable[[None], None] | None = None) -> Callable:
         """
@@ -83,11 +135,19 @@ class EventManager:
         def schedule(func: Callable) -> Callable:
             logger.info(f"Scheduling {func.__name__} to run every {interval.total_seconds()} seconds.")
             listener = ScheduledListener(interval=interval, func=func)
-            listener.start()
+            listener()
             self._scheduled_listeners.append(listener)
             return func
 
         return schedule(func) if func else schedule
+
+    def batch_listeners(self, event: str) -> list[Callable[[list[BaseModel]], None]]:
+        """
+        Returns all batch listeners for the provided event.
+        """
+        return [
+            listener.func for listener in self._event_tree.find_listeners(event) if isinstance(listener, BatchListener)
+        ]
 
     def listeners(self, event: str) -> list[Callable[[BaseModel], None]]:
         """
@@ -145,7 +205,7 @@ class Node:
         self.parent: "Node | Tree | None" = None
         self.children: collections.OrderedDict[str, "Node"] = collections.OrderedDict()
         self.wildcard: bool = wildcard
-        self.listeners: list[Listener] = []
+        self.listeners: list[BaseListener] = []
 
     def add_child(self, node: "Node") -> "Node":
         """
@@ -174,12 +234,12 @@ class Node:
             node.parent = self
             return node
 
-    def add_listener(self, listener: Listener):
+    def add_listener(self, listener: BaseListener):
         """
         Add a listener to this node.
 
         Args:
-            listener (Listener): Listener to add to the node
+            listener (BaseListener): Listener to add to the node
         """
         if listener not in self.listeners:
             self.listeners.append(listener)
@@ -255,13 +315,13 @@ class Tree:
         """
         return sum((node.find_nodes(event=event) for node in self.children.values()), [])
 
-    def add_listener(self, listener: Listener) -> None:
+    def add_listener(self, listener: BaseListener) -> None:
         """
         Add a listener to the tree. Either add a new Node to the tree or add the listener into
         the tree at the appropriate Node if it already exists.
 
         Args:
-            listener (Listener): Listener to add to the tree.
+            listener (BaseListener): Listener to add to the tree.
         """
         # add nodes without evaluating wildcards, this is done during node lookup only
         names = listener.event.split(".")
@@ -302,7 +362,7 @@ class Tree:
             node.parent = self
             return node
 
-    def find_listeners(self, event: str) -> list[Listener]:
+    def find_listeners(self, event: str) -> list[BaseListener]:
         """
         Get all listener functions from the nodes that match the provided event.
 
