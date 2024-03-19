@@ -1,0 +1,81 @@
+[project]
+name = "event_manager"
+version = "0.0.0"
+authors = [{ name = "Jeordy", email = "JeordyR@users.noreply.github.com" }]
+description = "Event management system for Python with support for Threading, Multiprocessing, and Async for task running."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.urls]
+Documentation = "https://event-manager.jeofi.com"
+Homepage = "https://event-manager.jeofi.com"
+Issues = "https://github.nwie.net/JeordyR/PyEventManager/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["event_manager"]
+
+[tool.hatch.envs.default]
+path = ".venv"
+dependencies = ["pytest", "mypy", "ruff", "pre-commit", "coverage"]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest -o junit_family=xunit2 --junitxml .pytest_cache/junit-report.xml {args:tests}"
+cov-report = ["- coverage combine", "coverage report"]
+cov = ["test-cov", "cov-report"]
+docs = "pdoc sidekick -o ./docs"
+
+[tool.coverage.run]
+branch = true
+parallel = true
+
+[tool.coverage.report]
+# fail_under = 80
+precision = 2
+
+[tool.mypy]
+strict = true
+exclude = ["venv"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+ignore = ["B006"]
+
+[tool.hatch.envs.style]
+detached = true
+dependencies = ["ruff"]
+
+[tool.hatch.envs.style.scripts]
+check = ["ruff check ."]
+fmt = ["ruff check . --fix"]
