@@ -33,7 +33,8 @@ test = "pytest {args:tests}"
 test-cov = "coverage run -m pytest -o junit_family=xunit2 --junitxml .pytest_cache/junit-report.xml {args:tests}"
 cov-report = ["- coverage combine", "coverage report"]
 cov = ["test-cov", "cov-report"]
-docs = "pdoc sidekick -o ./docs"
+docs-build = "python -m pdoc event_manager --docformat google -o ./docs"
+docs-live = "python -m pdoc event_manager --docformat google"
 
 [tool.coverage.run]
 branch = true
