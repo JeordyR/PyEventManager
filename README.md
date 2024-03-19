@@ -34,6 +34,8 @@ For each listener type, there are multiple execution options determining how the
 
 Install via [pip](https://pypi.python.org/pypi/event-manager)
 
+`pip install event-manager`
+
 ---
 
 ## Usage
