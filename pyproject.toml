@@ -19,6 +19,7 @@ build-backend = "hatchling.build"
 [project.urls]
 Documentation = "https://event-manager.jeofi.com"
 Homepage = "https://event-manager.jeofi.com"
+Repository = "https://github.nwie.net/JeordyR/PyEventManager"
 Issues = "https://github.nwie.net/JeordyR/PyEventManager/issues"
 
 [tool.hatch.build.targets.wheel]
