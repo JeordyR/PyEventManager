@@ -1,5 +1,5 @@
 [project]
-name = "event-dispatcher"
+name = "event_manager"
 version = "0.1.1"
 authors = [{ name = "Jeordy", email = "JeordyR@users.noreply.github.com" }]
 description = "Event management system for Python with support for Threading, Multiprocessing, and Async for task running."
