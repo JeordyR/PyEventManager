@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/JeordyR/PyEventManager/compare/v0.1.1...v0.1.2) (2024-03-19)
+
+
+### Bug Fixes
+
+* try another project name ([7ecd4ad](https://github.com/JeordyR/PyEventManager/commit/7ecd4ad99410cf335fc8943cfdf9cd9608a09610))
+
 ## [0.1.1](https://github.com/JeordyR/PyEventManager/compare/v0.1.0...v0.1.1) (2024-03-19)
 
 
