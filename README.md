@@ -21,11 +21,11 @@ For each listener type, there are multiple execution options determining how the
 
 ## Todo
 
-* Add tests
 * Fix up docstrings across the board
+* Add tests
 * Add support for async execution within an existing event loop
 * Consider adding support for returning data from the listeners
-* Add Queue options for external data stores (redis, rabbitmq?, etc.) for persistence
+* Add support for external data stores (redis, rabbitmq?, etc.) for persistence of event data / batching
 
 ---
 
