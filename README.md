@@ -1,6 +1,6 @@
 # PyEventManager
 
-[Read the Docs!](https://event-manager.jeofi.com)
+[Read the Docs!](https://jeordyr.github.io/PyEventManager/)
 
 PyEventManager is a simple event-based routing package allowing code to be structured in a pseudo-decentralized manner.
 
