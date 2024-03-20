@@ -3,19 +3,17 @@ from collections.abc import Callable
 from multiprocessing import Process
 from threading import Thread
 
-from pydantic import BaseModel
-
 from event_manager.listeners.base import BaseListener
 
 logger = logging.getLogger("event_manager")
 
 
 class Listener(BaseListener):
-    func: Callable[[BaseModel], None]
+    func: Callable
     event: str
     fork_type: type[Thread | Process]
 
-    def __init__(self, event: str, func: Callable[[BaseModel], None], fork_type: type[Thread | Process] = Process):
+    def __init__(self, event: str, func: Callable, fork_type: type[Thread | Process] = Process):
         """
         Class for a basic listener in the event management system.
 
@@ -29,14 +27,13 @@ class Listener(BaseListener):
         self.event = event
         self.fork_type = fork_type
 
-    def __call__(self, data: BaseModel):
+    def __call__(self, *args, **kwargs):
         """
-        Call invocation for the obejct, creates and runs a new fork with the stored function, passing data to it.
+        Call invocation for the obejct, creates and runs a new fork with the stored function.
 
-        Args:
-            data (BaseModel): Data to pass to the invoked function.
+        Arguments in the call are passed through to the stored function.
         """
-        logger.debug(f"Listener running func: {self.func.__name__} with data: {data.model_dump()}")
-        fork = self.fork_type(target=self.func, args=(data,))
+        logger.debug(f"Listener running func: {self.func.__name__}")
+        fork = self.fork_type(target=self.func, args=args, kwargs=kwargs)
         fork.daemon = True
         fork.start()

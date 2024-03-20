@@ -4,12 +4,11 @@ from collections.abc import Callable
 from datetime import datetime
 from multiprocessing import Process
 from threading import Thread
-
-from pydantic import BaseModel
+from typing import Any
 
 from event_manager.listeners.base import BaseListener
 from event_manager.queues.base import QueueInterface
-from event_manager.queues.memory import ProcessQueue
+from event_manager.queues.memory import ProcessQueue, ThreadQueue
 
 logger = logging.getLogger("event_manager")
 
@@ -39,8 +38,7 @@ def batch_input(batch_window: int, queue: QueueInterface, callback: Callable):
                     f"Batch data updated too recently for func {callback.__name__}, waiting {batch_window} seconds."
                 )
 
-    all_entries = queue.get_all()
-    callback(all_entries)
+    callback(queue.get_all())
 
 
 class BatchListener(BaseListener):
@@ -52,7 +50,7 @@ class BatchListener(BaseListener):
         self,
         event: str,
         batch_window: int,
-        func: Callable[[list[BaseModel]], None],
+        func: Callable[[list[Any]], None],
         fork_type: type[Thread | Process] = Process,
         queue_type: type[QueueInterface] = ProcessQueue,
     ):
@@ -75,7 +73,17 @@ class BatchListener(BaseListener):
         self.fork: Thread | Process | None = None
         self.fork_type: type[Thread | Process] = fork_type
         self.queue_type: type[QueueInterface] = queue_type
-        self.queue = self.queue_type()
+
+        # Fix the queue type if set incorrectly with known queue types
+        _queue_type = queue_type
+        if fork_type == Thread and queue_type == ProcessQueue:
+            logger.warning("Threaded batch listeners do not support ProcessQueues, defaulting to ThreadQueue.")
+            _queue_type = ThreadQueue
+        elif fork_type == Process and queue_type == ThreadQueue:
+            logger.warning("Process batch listeners do not support ThreadQueues, defaulting to ProcessQueue.")
+            _queue_type = ProcessQueue
+
+        self.queue = _queue_type()
 
     def new(self):
         """
@@ -88,14 +96,14 @@ class BatchListener(BaseListener):
         )
         self.fork.daemon = True
 
-    def __call__(self, data: BaseModel):
+    def __call__(self, data: Any):
         """
         Call invocation for the object. Checks if a fork is already running for this listener. If a fork already
         exists, adds the provided data to the batch. If the listener is not currently running it creates a new fork,
         and passes the data in to start the batch.
 
         Args:
-            data (BaseModel): Data to add to the queue.
+            data (Any): Data object to add to the queue.
         """
         if self.fork is not None and self.fork.is_alive:
             logger.debug(f"{self.func.__name__}: adding data {data.model_dump()} to queue.")

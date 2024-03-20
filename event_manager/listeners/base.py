@@ -3,8 +3,6 @@ from collections.abc import Callable
 from multiprocessing import Process
 from threading import Thread
 
-from pydantic import BaseModel
-
 
 class BaseListener(ABC):
     func: Callable
@@ -12,5 +10,5 @@ class BaseListener(ABC):
     fork_type: type[Thread | Process]
 
     @abstractmethod
-    def __call__(self, data: BaseModel):
+    def __call__(self, *args, **kwargs):
         pass

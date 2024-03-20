@@ -19,10 +19,16 @@ class ThreadQueue(QueueInterface, queue.SimpleQueue):
     def __len__(self):
         return self.qsize()
 
+    def empty(self) -> bool:
+        return super().empty()
+
     def put(self, *args, **kwargs):
         self.last_updated = datetime.now()
 
         super().put(*args, **kwargs)
+
+    def get(self) -> Any:
+        return super().get()
 
     def get_all(self) -> list[Any]:
         """
@@ -52,10 +58,16 @@ class ProcessQueue(QueueInterface, Queue):
     def __len__(self):
         return self.qsize()
 
+    def empty(self) -> bool:
+        return super().empty()
+
     def put(self, *args, **kwargs):
         self.last_updated = datetime.now()
 
         super().put(*args, **kwargs)
+
+    def get(self) -> Any:
+        return super().get()
 
     def get_all(self) -> list[Any]:
         """

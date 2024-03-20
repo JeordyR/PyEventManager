@@ -12,14 +12,12 @@ from datetime import timedelta
 from multiprocessing import Process
 from threading import Thread
 
-from pydantic import BaseModel
-
 from event_manager.listeners.base import BaseListener
 from event_manager.listeners.batch import BatchListener
 from event_manager.listeners.scheduled import ScheduledListener
 from event_manager.listeners.simple import Listener
 from event_manager.queues.base import QueueInterface
-from event_manager.queues.memory import ProcessQueue, ThreadQueue
+from event_manager.queues.memory import ProcessQueue
 
 logger = logging.getLogger("event_manager")
 
@@ -59,30 +57,17 @@ class EventManager:
         if isinstance(event, str):
             event = [event]
 
-        def _on(func: Callable) -> Callable[[BaseModel], None]:
+        def _on(func: Callable) -> Callable:
             for e in event:
                 logger.info(f"Registered function {func.__name__} to run on {e} event.")
                 if batch:
-                    # Fix the queue type if set incorrectly with known queue types
-                    _queue_type = queue_type
-                    if fork_type == Thread and queue_type == ProcessQueue:
-                        logger.warning(
-                            "Threaded batch listeners do not support ProcessQueues, defaulting to ThreadQueue."
-                        )
-                        _queue_type = ThreadQueue
-                    elif fork_type == Process and queue_type == ThreadQueue:
-                        logger.warning(
-                            "Process batch listeners do not support ThreadQueues, defaulting to ProcessQueue."
-                        )
-                        _queue_type = ProcessQueue
-
                     self._event_tree.add_listener(
                         BatchListener(
                             event=e,
                             batch_window=batch_window,
                             func=func,
                             fork_type=fork_type,
-                            queue_type=_queue_type,
+                            queue_type=queue_type,
                         )
                     )
                 else:
@@ -141,7 +126,7 @@ class EventManager:
 
         return schedule(func) if func else schedule
 
-    def batch_listeners(self, event: str) -> list[Callable[[list[BaseModel]], None]]:
+    def batch_listeners(self, event: str) -> list[Callable]:
         """
         Returns all batch listeners for the provided event.
         """
@@ -149,19 +134,19 @@ class EventManager:
             listener.func for listener in self._event_tree.find_listeners(event) if isinstance(listener, BatchListener)
         ]
 
-    def listeners(self, event: str) -> list[Callable[[BaseModel], None]]:
+    def listeners(self, event: str) -> list[Callable]:
         """
         Returns all functions that are registered to an event.
         """
         return [listener.func for listener in self._event_tree.find_listeners(event)]
 
-    def listeners_any(self) -> list[Callable[[BaseModel], None]]:
+    def listeners_any(self) -> list[Callable]:
         """
         Returns all functions that are registered to any event.
         """
         return [listener.func for listener in self._any_listeners]
 
-    def emit(self, event: str, data: BaseModel):
+    def emit(self, event: str, *args, **kwargs):
         """
         Emit an event into the system, calling all functions listening for the provided event.
 
@@ -172,11 +157,18 @@ class EventManager:
 
         listeners.extend(self._any_listeners)
 
-        logger.debug(f"{event} event emitted, executing on {len(listeners)} functions with data: {data.model_dump()}")
+        logger.debug(f"{event} event emitted, executing on {len(listeners)} listener functions")
 
         # call listeners
         for listener in listeners:
-            listener(data)
+            if isinstance(list, BatchListener):
+                if "data" in kwargs:
+                    listener(data=kwargs["data"])
+                else:
+                    logger.error("BatchListener listener called without data.")
+                    raise Exception("BatchListener listener called without data.")
+            else:
+                listener(*args, **kwargs)
 
 
 class Node:

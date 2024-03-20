@@ -10,7 +10,7 @@ from event_manager.listeners.base import BaseListener
 logger = logging.getLogger("event_manager")
 
 
-def run(interval: timedelta, func: Callable, event: Event | threading.Event):
+def run(_interval: timedelta, _func: Callable, _event: Event | threading.Event, *args, **kwargs):
     """
     Run the provided function on the provided interval.
 
@@ -18,16 +18,16 @@ def run(interval: timedelta, func: Callable, event: Event | threading.Event):
         interval (timedelta): Inteveral to run the stored function.
         func (Callable): Function to run on schedule.
     """
-    while not event.wait(interval.total_seconds()):
-        logger.debug(f"Running {func.__name__} on schedule.")
-        func()
+    while not _event.wait(_interval.total_seconds()):
+        logger.debug(f"Running {_func.__name__} on schedule.")
+        _func(*args, **kwargs)
 
 
 class ScheduledListener(BaseListener):
     def __init__(
         self,
         interval: timedelta,
-        func: Callable[[None], None],
+        func: Callable,
         fork_type: type[threading.Thread | multiprocessing.Process] = multiprocessing.Process,
     ):
         """
@@ -47,20 +47,21 @@ class ScheduledListener(BaseListener):
             threading.Event() if fork_type == threading.Thread else multiprocessing.Event()
         )
 
-    def __call__(self):
+    def __call__(self, *args, **kwargs):
         """
-        Call invocation for the obejct, creates and runs a new fork with the stored function, passing data to it.
+        Call invocation for the obejct, creates and runs a new fork with the stored function.
 
-        Args:
-            data (BaseModel): Data to pass to the invoked function.
+        Arguments in the call are passed through to the stored function.
         """
         logger.debug(f"Executing {self.func.__name__}... Set to run every {self.interval.total_seconds()} seconds.")
         fork = self.fork_type(
             target=run,
+            args=args,
             kwargs={
-                "interval": self.interval,
-                "func": self.func,
-                "event": self.sync_event,
+                "_interval": self.interval,
+                "_func": self.func,
+                "_event": self.sync_event,
+                **kwargs,
             },
         )
         fork.daemon = True
