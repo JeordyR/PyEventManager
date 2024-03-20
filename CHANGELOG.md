@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0](https://github.com/JeordyR/PyEventManager/compare/v0.1.3...v0.2.0) (2024-03-20)
+
+
+### Features
+
+* Add ability to stop scheduled listeners. ([b672fde](https://github.com/JeordyR/PyEventManager/commit/b672fde1980e7dddf5c85ec1f24c7712f209006c))
+* Allow arbitrary input to all listener types excent BatchListeners ([54e2ead](https://github.com/JeordyR/PyEventManager/commit/54e2eadf8bb1c09a506b1c162d182f41a290af3a))
+
+
+### Bug Fixes
+
+* Update package links ([05847ef](https://github.com/JeordyR/PyEventManager/commit/05847efad7f33953ecd91b8fdec86a3bb0f43a45))
+
 ## [0.1.3](https://github.com/JeordyR/PyEventManager/compare/v0.1.2...v0.1.3) (2024-03-19)
 
 
