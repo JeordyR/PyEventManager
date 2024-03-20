@@ -4,6 +4,7 @@ EventManager project providing an internal event processing system.
 
 __all__ = ["EventManager"]
 
+import abc
 import collections
 import fnmatch
 import logging
