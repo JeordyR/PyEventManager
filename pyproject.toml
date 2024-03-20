@@ -31,18 +31,18 @@ dependencies = ["pytest", "mypy", "ruff", "pre-commit", "coverage", "pdoc"]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
-test-cov = "coverage run -m pytest -o junit_family=xunit2 --junitxml .pytest_cache/junit-report.xml {args:tests}"
-cov-report = ["- coverage combine", "coverage report"]
-cov = ["test-cov", "cov-report"]
+test-cov = "coverage run --source=event_manager -m pytest {args:tests}"
+cov-report = "coverage report"
+cov-html = "coverage html --title=PyEventManager"
+cov = ["test-cov", "cov-report", "cov-html"]
 docs-build = "python -m pdoc event_manager --docformat google -o ./docs"
 docs-live = "python -m pdoc event_manager --docformat google"
 
 [tool.coverage.run]
 branch = true
-parallel = true
 
 [tool.coverage.report]
-# fail_under = 80
+fail_under = 90
 precision = 2
 
 [tool.mypy]
