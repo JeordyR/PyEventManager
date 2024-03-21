@@ -2,7 +2,6 @@
 EventManager project providing an internal event processing system.
 
 
-
 """
 
 __all__ = ["EventManager"]
