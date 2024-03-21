@@ -31,10 +31,8 @@ dependencies = ["pytest", "mypy", "ruff", "pre-commit", "coverage", "pdoc"]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
-test-cov = "coverage run --source=event_manager -m pytest {args:tests}"
-cov-report = "coverage report"
-cov-html = "coverage html --title=PyEventManager"
-cov = ["test-cov", "cov-report", "cov-html"]
+test-cov = "coverage run --source=event_manager -m pytest {args:tests}; coverage report"
+test-cov-html = "coverage run --source=event_manager -m pytest {args:tests}; coverage html --title=PyEventManager"
 docs-build = "python -m pdoc event_manager --docformat google -o ./docs"
 docs-live = "python -m pdoc event_manager --docformat google"
 
