@@ -9,9 +9,9 @@ on:
       - main
 
 permissions:
-  contents: read
   issues: read
   checks: write
+  contents: write
   pull-requests: write
 
 jobs:
@@ -35,35 +35,24 @@ jobs:
       - name: Test
         id: test
         run: hatch run test-report
-      - name: Upload pytest test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-results
-          path: junit/test-results.xml
       - name: Publish pytest test results to PR
         if: always() && github.event_name == 'pull_request'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: junit/test-results.xml
 
-      - name: Upload coverage results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-results
-          path: coverage.xml
-      - name: Generate markdown summary of coverage
-        if: always()
-        uses: irongut/CodeCoverageSummary@v1.3.0
-        with:
-          filename: coverage.xml
-          format: markdown
-          output: both
-      - name: Publish coverage report to PR
-        uses: marocchino/sticky-pull-request-comment@v2
+      - name: Coverage comment
         if: always() && github.event_name == 'pull_request'
+        id: coverage_comment
+        uses: py-cov-action/python-coverage-comment-action@v3
         with:
-          header: Code Coverage
-          recreate: true
-          path: code-coverage-results.md
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Store Pull Request comment to be posted
+        uses: actions/upload-artifact@v4
+        if: always() && steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
+        with:
+          # If you use a different name, update COMMENT_ARTIFACT_NAME accordingly
+          name: python-coverage-comment-action
+          # If you use a different name, update COMMENT_FILENAME accordingly
+          path: python-coverage-comment-action.txt
