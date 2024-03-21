@@ -27,17 +27,18 @@ packages = ["event_manager"]
 
 [tool.hatch.envs.default]
 path = ".venv"
-dependencies = ["pytest", "mypy", "ruff", "pre-commit", "coverage", "pdoc"]
+dependencies = ["pytest", "pytest-cov", "mypy", "ruff", "coverage", "pdoc"]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
-test-cov = "coverage run --source=event_manager -m pytest {args:tests}; coverage report"
-test-cov-html = "coverage run --source=event_manager -m pytest {args:tests}; coverage html --title=PyEventManager"
+test-cov = "pytest --doctest-modules --cov=event_manager {args:tests}"
+test-report = "pytest --doctest-modules --junit-xml=junit/test-results.xml --cov=event_manager --cov-report=xml --cov-report=html"
 docs-build = "python -m pdoc event_manager --docformat google -o ./docs"
 docs-live = "python -m pdoc event_manager --docformat google"
 
 [tool.coverage.run]
 branch = true
+omit = ["event_manager/listeners/base.py"]
 
 [tool.coverage.report]
 fail_under = 90
@@ -77,5 +78,5 @@ detached = true
 dependencies = ["ruff"]
 
 [tool.hatch.envs.style.scripts]
-check = ["ruff check ."]
-fmt = ["ruff check . --fix"]
+check = ["ruff check . --output-format=github"]
+fmt = ["ruff check . --output-format=github --fix"]

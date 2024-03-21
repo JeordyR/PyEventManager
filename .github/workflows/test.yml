@@ -30,10 +30,16 @@ jobs:
         run: hatch run style:check
       - name: Test
         id: test
-        run: hatch run test-cov-html
-      - name: Store coverage files
-        if: success() || steps.test.conclusion == 'failure'
+        run: hatch run test-report
+      - name: Upload pytest test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-html
-          path: ./htmlcov
+          name: pytest-results
+          path: junit/test-results.xml
+      - name: Upload coverage results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: coverage.xml
