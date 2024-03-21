@@ -31,7 +31,7 @@ class EventManager:
         EventManager class wrapping the overall event management process.
 
         Args:
-            wildcard (bool, optional): If listeners can be registered with wildcard matching on events. #kasdlkfj ;alskdlkjasdf 
+            wildcard (bool, optional): If listeners can be registered with wildcard matching on events.
                                         Defaults to True.
         """
         # tree of nodes keeping track of nested events
