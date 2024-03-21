@@ -28,24 +28,12 @@ jobs:
           pip install hatch
       - name: Lint
         run: hatch run style:check
-        continue-on-error: true
       - name: Test
-        run: hatch run cov
-        continue-on-error: true
+        id: test
+        run: hatch run test-cov-html
       - name: Store coverage files
+        if: success() || steps.test.conclusion == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-html
-          path: htmlcov
-
-  # https://github.com/marketplace/actions/alls-green#why
-  alls-green:  # This job does nothing and is only used for the branch protection
-    if: always()
-    needs:
-      - test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Decide whether the needed jobs succeeded or failed
-        uses: re-actors/alls-green@release/v1
-        with:
-          jobs: ${{ toJSON(needs) }}
+          path: ./htmlcov
