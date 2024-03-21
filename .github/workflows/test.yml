@@ -4,10 +4,9 @@ on:
   push:
     branches:
       - master
-  # pull_request:
-  #   types:
-  #     - opened
-  #     - synchronize
+  pull_request:
+    branches:
+      -master
 
 permissions:
   pull-requests: write
