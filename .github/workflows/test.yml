@@ -39,7 +39,7 @@ jobs:
           name: pytest-results
           path: junit/test-results.xml
       - name: Publish pytest test results to PR
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: junit/test-results.xml
@@ -56,10 +56,11 @@ jobs:
         with:
           filename: coverage.xml
           format: markdown
-          output: code-coverage-results.md
+          output: both
       - name: Publish coverage report to PR
         uses: marocchino/sticky-pull-request-comment@v2
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         with:
+          header: Code Coverage
           recreate: true
           path: code-coverage-results.md
