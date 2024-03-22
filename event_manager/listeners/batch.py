@@ -2,7 +2,7 @@ import logging
 import time
 from collections.abc import Callable
 from datetime import datetime
-from multiprocessing import Process
+from multiprocessing import Process, process
 from threading import Thread
 from typing import Any
 
@@ -94,7 +94,11 @@ class BatchListener(BaseListener):
             target=batch_input,
             kwargs={"batch_window": self.batch_window, "queue": self.queue, "callback": self.func},
         )
-        self.fork.daemon = True
+
+        if self.fork_type == Process and process.current_process().daemon:
+            self.fork.daemon = False
+        else:
+            self.fork.daemon = True
 
     def __call__(self, data: Any):
         """

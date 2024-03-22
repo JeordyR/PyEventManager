@@ -3,6 +3,7 @@ import multiprocessing
 import threading
 from collections.abc import Callable
 from datetime import timedelta
+from multiprocessing import process
 from multiprocessing.synchronize import Event
 
 from event_manager.listeners.base import BaseListener
@@ -64,7 +65,12 @@ class ScheduledListener(BaseListener):
                 **kwargs,
             },
         )
-        fork.daemon = True
+
+        if self.fork_type == multiprocessing.Process and process.current_process().daemon:
+            fork.daemon = False
+        else:
+            fork.daemon = True
+
         fork.start()
 
     def stop(self):

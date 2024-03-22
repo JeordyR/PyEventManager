@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Callable
-from multiprocessing import Process
+from multiprocessing import Process, process
 from threading import Thread
 
 from event_manager.listeners.base import BaseListener
@@ -35,5 +35,10 @@ class Listener(BaseListener):
         """
         logger.debug(f"Listener running func: {self.func.__name__}")
         fork = self.fork_type(target=self.func, args=args, kwargs=kwargs)
-        fork.daemon = True
+
+        if self.fork_type == Process and process.current_process().daemon:
+            fork.daemon = False
+        else:
+            fork.daemon = True
+
         fork.start()
