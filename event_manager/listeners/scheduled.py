@@ -2,10 +2,11 @@ import logging
 import multiprocessing
 import threading
 from collections.abc import Callable
+from concurrent.futures import Executor, Future
 from datetime import timedelta
-from multiprocessing import process
 from multiprocessing.synchronize import Event
 
+from event_manager.fork_types import ForkType
 from event_manager.listeners.base import BaseListener
 
 logger = logging.getLogger("event_manager")
@@ -29,7 +30,7 @@ class ScheduledListener(BaseListener):
         self,
         interval: timedelta,
         func: Callable,
-        fork_type: type[threading.Thread | multiprocessing.Process] = multiprocessing.Process,
+        fork_type: ForkType,
     ):
         """
         Class for a basic listener in the event management system.
@@ -45,33 +46,25 @@ class ScheduledListener(BaseListener):
         self.func = func
         self.fork_type = fork_type
         self.sync_event: Event | threading.Event = (
-            threading.Event() if fork_type == threading.Thread else multiprocessing.Event()
+            threading.Event() if fork_type == ForkType.THREAD else multiprocessing.Event()
         )
+        self.future: Future | None = None
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, pool: Executor, *args, **kwargs):
         """
         Call invocation for the obejct, creates and runs a new fork with the stored function.
 
         Arguments in the call are passed through to the stored function.
         """
         logger.debug(f"Executing {self.func.__name__}... Set to run every {self.interval.total_seconds()} seconds.")
-        fork = self.fork_type(
-            target=run,
-            args=args,
-            kwargs={
-                "_interval": self.interval,
-                "_func": self.func,
-                "_event": self.sync_event,
-                **kwargs,
-            },
-        )
+        kwargs = {
+            "_interval": self.interval,
+            "_func": self.func,
+            "_event": self.sync_event,
+            **kwargs,
+        }
 
-        if self.fork_type == multiprocessing.Process and process.current_process().daemon:
-            fork.daemon = False
-        else:
-            fork.daemon = True
-
-        fork.start()
+        self.future = pool.submit(run, *args, **kwargs)
 
     def stop(self):
         """

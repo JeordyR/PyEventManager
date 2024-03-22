@@ -8,10 +8,10 @@ import collections
 import fnmatch
 import logging
 from collections.abc import Callable
+from concurrent.futures import Future, ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import timedelta
-from multiprocessing import Process
-from threading import Thread
 
+from event_manager.fork_types import ForkType
 from event_manager.listeners.base import BaseListener
 from event_manager.listeners.batch import BatchListener
 from event_manager.listeners.scheduled import ScheduledListener
@@ -38,13 +38,17 @@ class EventManager:
         self._any_listeners: list[BaseListener] = []
         self._scheduled_listeners: list[ScheduledListener] = []
 
+        # pools for execution
+        self.thread_pool = ThreadPoolExecutor()
+        self.process_pool = ProcessPoolExecutor()
+
     def on(
         self,
         event: list[str] | str,
         batch: bool = False,
         batch_window: int = 30,
         func: Callable | None = None,
-        fork_type: type[Thread | Process] = Process,
+        fork_type: ForkType = ForkType.PROCESS,
         queue_type: type[QueueInterface] = ProcessQueue,
     ) -> Callable:
         """
@@ -82,7 +86,7 @@ class EventManager:
         batch: bool = False,
         batch_window: int = 30,
         func: Callable | None = None,
-        fork_type: type[Thread | Process] = Process,
+        fork_type: ForkType = ForkType.PROCESS,
         queue_type: type[QueueInterface] = ProcessQueue,
     ) -> Callable:
         """
@@ -108,7 +112,12 @@ class EventManager:
 
         return _on_any(func) if func else _on_any
 
-    def schedule(self, interval: timedelta, func: Callable[[None], None] | None = None) -> Callable:
+    def schedule(
+        self,
+        interval: timedelta,
+        func: Callable[[None], None] | None = None,
+        fork_type: ForkType = ForkType.PROCESS,
+    ) -> Callable:
         """
         Registers a scheduled function that will be executed on the specified interval.
 
@@ -119,8 +128,13 @@ class EventManager:
 
         def schedule(func: Callable) -> Callable:
             logger.info(f"Scheduling {func.__name__} to run every {interval.total_seconds()} seconds.")
-            listener = ScheduledListener(interval=interval, func=func)
-            listener()
+            listener = ScheduledListener(interval=interval, func=func, fork_type=fork_type)
+
+            if fork_type == ForkType.THREAD:
+                listener(self.thread_pool)
+            else:
+                listener(self.process_pool)
+
             self._scheduled_listeners.append(listener)
             return func
 
@@ -146,7 +160,7 @@ class EventManager:
         """
         return [listener.func for listener in self._any_listeners]
 
-    def emit(self, event: str, *args, **kwargs):
+    def emit(self, event: str, *args, **kwargs) -> Future:
         """
         Emit an event into the system, calling all functions listening for the provided event.
 
@@ -161,14 +175,22 @@ class EventManager:
 
         # call listeners
         for listener in listeners:
-            if isinstance(list, BatchListener):
+            if isinstance(listener, BatchListener):
                 if "data" in kwargs:
-                    listener(data=kwargs["data"])
+                    if listener.fork_type == ForkType.THREAD:
+                        listener(self.thread_pool, data=kwargs["data"])
+                    else:
+                        listener(self.process_pool, data=kwargs["data"])
                 else:
                     logger.error("BatchListener listener called without data.")
                     raise Exception("BatchListener listener called without data.")
             else:
-                listener(*args, **kwargs)
+                if listener.fork_type == ForkType.THREAD:
+                    listener(self.thread_pool, args=args, kwargs=kwargs)
+                else:
+                    listener(self.process_pool, args=args, kwargs=kwargs)
+
+        return listener.future  # pyright: ignore  -- Future is always set in the loop above
 
 
 class Node:

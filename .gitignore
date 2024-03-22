@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 .docs/
 junit/
+*.ipynb
 
 # C extensions
 *.so

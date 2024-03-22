@@ -1,8 +1,8 @@
 import logging
 from collections.abc import Callable
-from multiprocessing import Process, process
-from threading import Thread
+from concurrent.futures import Executor, Future
 
+from event_manager.fork_types import ForkType
 from event_manager.listeners.base import BaseListener
 
 logger = logging.getLogger("event_manager")
@@ -11,9 +11,9 @@ logger = logging.getLogger("event_manager")
 class Listener(BaseListener):
     func: Callable
     event: str
-    fork_type: type[Thread | Process]
+    fork_type: ForkType
 
-    def __init__(self, event: str, func: Callable, fork_type: type[Thread | Process] = Process):
+    def __init__(self, event: str, func: Callable, fork_type: ForkType):
         """
         Class for a basic listener in the event management system.
 
@@ -26,19 +26,13 @@ class Listener(BaseListener):
         self.func = func
         self.event = event
         self.fork_type = fork_type
+        self.future: Future | None = None
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, pool: Executor, *args, **kwargs):
         """
         Call invocation for the obejct, creates and runs a new fork with the stored function.
 
         Arguments in the call are passed through to the stored function.
         """
         logger.debug(f"Listener running func: {self.func.__name__}")
-        fork = self.fork_type(target=self.func, args=args, kwargs=kwargs)
-
-        if self.fork_type == Process and process.current_process().daemon:
-            fork.daemon = False
-        else:
-            fork.daemon = True
-
-        fork.start()
+        self.future = pool.submit(self.func, *args, **kwargs)
