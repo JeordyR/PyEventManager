@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/JeordyR/PyEventManager/compare/v0.2.2...v0.2.3) (2024-03-22)
+
+
+### Bug Fixes
+
+* set Process listeners to run non-daemon if already in a daemon process ([8a1fc77](https://github.com/JeordyR/PyEventManager/commit/8a1fc773d574189530c8d5eae12d218bd2e8473a))
+
 ## [0.2.2](https://github.com/JeordyR/PyEventManager/compare/v0.2.1...v0.2.2) (2024-03-22)
 
 
