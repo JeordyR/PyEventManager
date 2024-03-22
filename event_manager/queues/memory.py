@@ -2,7 +2,8 @@ import queue
 from datetime import datetime
 
 # from multiprocessing.queues import Queue
-from multiprocessing import Queue, get_context
+from multiprocessing import get_context
+from multiprocessing.queues import Queue
 from typing import Any
 
 from event_manager.queues.base import QueueInterface
