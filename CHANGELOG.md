@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/JeordyR/PyEventManager/compare/v0.2.3...v0.3.0) (2024-03-22)
+
+
+### Features
+
+* updated system to use concurrent.futures for concurrency ([cdfab2d](https://github.com/JeordyR/PyEventManager/commit/cdfab2dd49d625c4caad2030f2329a1eadf1fb94))
+
 ## [0.2.3](https://github.com/JeordyR/PyEventManager/compare/v0.2.2...v0.2.3) (2024-03-22)
 
 
