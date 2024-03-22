@@ -14,18 +14,18 @@ There are multiple execution options when registering a listener:
 
 For each listener type, there are multiple execution options determining how the function will be executed; determined by `fork_type`
 
-* **Process(Default)**: The lsitener is run within its own newly spawned Process
-* **Thread**: The listener is run within its own newly spawned Thread
+* **Process(Default)**: The listener is run in a new Process
+* **Thread**: The listener is run in a new Thread
 
 ---
 
 ## Todo
 
-* Fix up docstrings across the board
 * Add tests
 * Add support for async execution within an existing event loop
-* Consider adding support for returning data from the listeners
 * Add support for external data stores (redis, rabbitmq?, etc.) for persistence of event data / batching
+* ~~Fix up docstrings across the board~~
+* ~~Consider adding support for returning data from the listeners~~ (emit now returns a list of Futures that caller can wait on and get results from if they want)
 
 ---
 
@@ -69,25 +69,32 @@ Install via [pip](https://pypi.python.org/pypi/pyeventmanager)
 
     em.on(event="somecategory.event", func=also_handle_some_event)
 
-    # Emit an event
+    # Emit an event without worrying about response
     em.emit(event="somecategory.event", data=MyDataType(...))
+
+    # Emit an event, wait for jobs to finish, and get the results
+    from concurrent.futures import wait
+
+    futures = em.emit(event="somecategory.event, data=MyDataType(...))
+    wait(futures)
+
+    results = [f.result() for f in futures]
+
 
 ### Simple Listener With Threading
 
 .. code-block:: python
-    from threading import Thread
-
-    from event_manager import EventManager
+    from event_manager import EventManager, ForkType
 
     em = EventManager()
 
     # Use Threading instead of Processing
-    @em.on(event="something.*", fork_type=Thread)
+    @em.on(event="something.*", fork_type=ForkType.THREAD)
 
 ### Batch Listener
 
 .. code-block:: python
-    from event_manager import EventManager, ThreadQueue
+    from event_manager import EventManager, ForkType, ThreadQueue
 
     em = EventManager()
 
@@ -100,9 +107,9 @@ Install via [pip](https://pypi.python.org/pypi/pyeventmanager)
     # The queue type will be auto-detected if not specified, but better to be explicit.
     @em.on(
         event="category.some_event",
+        fork_type=ForkType.THREAD,
         batch=True,
         batch_window=60,
-        fork_type=Thread,
         queue_type=ThreadQueue,
     )
     def handle_some_event_batch(data: list[MyDataType]):
@@ -133,10 +140,9 @@ Interval is defined using a [datetime.timedelta](https://docs.python.org/3/libra
 
 .. code-block:: python
     from datetime import datetime
-    from threading import Thread
     from typing import Any
 
-    from event_manager import EventManager, QueueInterface
+    from event_manager import EventManager, ForkType, QueueInterface
 
     class MyCustomQueue(QueueInterface):
         last_updated: datetime | None
@@ -189,9 +195,9 @@ Interval is defined using a [datetime.timedelta](https://docs.python.org/3/libra
     # Add a batched listener configured to use Threading with our custom Queue implementation
     @em.on(
         event="category.some_event",
+        fork_type=ForkType.THREAD,
         batch=True,
         batch_window=60,
-        fork_type=Thread,
         queue_type=MyCustomQueue,
     )
     def handle_batch_process(data: list[Any]):
