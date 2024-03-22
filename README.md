@@ -42,6 +42,7 @@ Install via [pip](https://pypi.python.org/pypi/pyeventmanager)
 ### Simple Listener
 
 .. code-block:: python
+
     from event_manager import EventManager
 
     em = EventManager()
@@ -84,6 +85,7 @@ Install via [pip](https://pypi.python.org/pypi/pyeventmanager)
 ### Simple Listener With Threading
 
 .. code-block:: python
+
     from event_manager import EventManager, ForkType
 
     em = EventManager()
@@ -94,6 +96,7 @@ Install via [pip](https://pypi.python.org/pypi/pyeventmanager)
 ### Batch Listener
 
 .. code-block:: python
+
     from event_manager import EventManager, ForkType, ThreadQueue
 
     em = EventManager()
@@ -120,6 +123,7 @@ Install via [pip](https://pypi.python.org/pypi/pyeventmanager)
 Interval is defined using a [datetime.timedelta](https://docs.python.org/3/library/datetime.html#timedelta-objects) object.
 
 .. code-block:: python
+
     from datetime import timedelta
 
     from event_manager import EventManager
@@ -139,6 +143,7 @@ Interval is defined using a [datetime.timedelta](https://docs.python.org/3/libra
 ### Using A Custom Queue for Batch Listener
 
 .. code-block:: python
+
     from datetime import datetime
     from typing import Any
 
