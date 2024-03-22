@@ -19,7 +19,7 @@ def batch_input(batch_window: int, queue: QueueInterface, callback: Callable) ->
 
     Args:
         batch_window (int): How long to batch up event data when invoked before processing events.
-        queue (BatchThreadQueue | BatchProcessQueue): Queue used to batch up the events.
+        queue (QueueInterface): Queue used to batch up the events.
         callback (Callable): Function to call to process the events.
     """
     while True:
@@ -64,8 +64,9 @@ class BatchListener(BaseListener):
             event (str): Event to match on
             batch_window (int): How long to batch up event data when invoked before processing events.
             func (Callable): Function to call to process the events.
-            fork_type (type[Thread | Process], optional): Type of fork to use when running the function.
-                                                            Defaults to Process.
+            fork_type (ForkType, optional): Type of fork to use when running the function. Defaults to PROCESS.
+            queue_type (type[QueueInterface], optional): Type of queue to use when batching up events.
+                                                            Defaults to ProcessQueue.
         """
         self.event = event
         self.batch_window = batch_window
@@ -92,7 +93,8 @@ class BatchListener(BaseListener):
         and passes the data in to start the batch.
 
         Args:
-            data (Any): Data object to add to the queue.
+            pool (Executor): Executor to run the function in.
+            data (Any): Data object to batch up and add to the queue.
         """
         if self.future and self.future.running():
             logger.debug(f"{self.func.__name__}: adding data to queue.")

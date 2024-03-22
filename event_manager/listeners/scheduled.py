@@ -17,8 +17,9 @@ def run(_interval: timedelta, _func: Callable, _event: Event | threading.Event, 
     Run the provided function on the provided interval.
 
     Args:
-        interval (timedelta): Inteveral to run the stored function.
-        func (Callable): Function to run on schedule.
+        _interval (timedelta): Inteveral to run the stored function.
+        _func (Callable): Function to run on schedule.
+        _event (Event | threading.Event): Event to check for stop conditions.
     """
     while not _event.wait(_interval.total_seconds()):
         logger.debug(f"Running {_func.__name__} on schedule.")
@@ -38,8 +39,7 @@ class ScheduledListener(BaseListener):
         Args:
             event (str): Event to match on.
             func (Callable): Function to call when listener triggers on a matching event.
-            fork_type (type[Thread | Process], optional): Type of fork to use when running the function.
-                                                            Defaults to Process.
+            fork_type (ForkType, optional): Type of fork to use when running the function. Defaults to PROCESS.
         """
         self.event = ""
         self.interval = interval
@@ -55,6 +55,9 @@ class ScheduledListener(BaseListener):
         Call invocation for the obejct, creates and runs a new fork with the stored function.
 
         Arguments in the call are passed through to the stored function.
+
+        Args:
+            pool (Executor): Executor to run the function in.
         """
         logger.debug(f"Executing {self.func.__name__}... Set to run every {self.interval.total_seconds()} seconds.")
         kwargs = {

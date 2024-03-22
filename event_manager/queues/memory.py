@@ -19,17 +19,21 @@ class ThreadQueue(QueueInterface, queue.SimpleQueue):
         super().__init__(*args, **kwargs)
 
     def __len__(self):
+        """Return the length of the queue."""
         return self.qsize()
 
     def empty(self) -> bool:
+        """Check if the queue is empty."""
         return super().empty()
 
     def put(self, *args, **kwargs):
+        """Put an item into the queue and update the last_updated attribute with curernt time."""
         self.last_updated = datetime.now()
 
         super().put(*args, **kwargs)
 
     def get(self) -> Any:
+        """Get an item from the queue."""
         return super().get()
 
     def get_all(self) -> list[Any]:
@@ -57,17 +61,21 @@ class ProcessQueue(QueueInterface, Queue):
         super().__init__(*args, **kwargs, ctx=get_context())
 
     def __len__(self):
+        """Return the length of the queue."""
         return self.qsize()
 
     def empty(self) -> bool:
+        """Check if the queue is empty."""
         return super().empty()
 
     def put(self, *args, **kwargs):
+        """Put an item into the queue and update the last_updated attribute with curernt time."""
         self.last_updated = datetime.now()
 
         super().put(*args, **kwargs)
 
     def get(self) -> Any:
+        """Get an item from the queue."""
         return super().get()
 
     def get_all(self) -> list[Any]:

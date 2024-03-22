@@ -20,8 +20,7 @@ class Listener(BaseListener):
         Args:
             event (str): Event to match on.
             func (Callable): Function to call when listener triggers on a matching event.
-            fork_type (type[Thread | Process], optional): Type of fork to use when running the function.
-                                                            Defaults to Process.
+            fork_type (ForkType, optional): Type of fork to use when running the function. Defaults to PROCESS.
         """
         self.func = func
         self.event = event
@@ -33,6 +32,9 @@ class Listener(BaseListener):
         Call invocation for the obejct, creates and runs a new fork with the stored function.
 
         Arguments in the call are passed through to the stored function.
+
+        Args:
+            pool (Executor): Executor to run the function in.
         """
         logger.debug(f"Listener running func: {self.func.__name__}")
         self.future = pool.submit(self.func, *args, **kwargs)

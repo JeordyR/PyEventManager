@@ -28,8 +28,7 @@ class EventManager:
         EventManager class wrapping the overall event management process.
 
         Args:
-            wildcard (bool, optional): If listeners can be registered with wildcard matching on events.
-                                        Defaults to True.
+            wildcard (bool, optional): If listeners can be registered with wildcard matching. Defaults to True.
         """
         # tree of nodes keeping track of nested events
         self._event_tree = Tree(wildcard=wildcard)
@@ -45,19 +44,29 @@ class EventManager:
     def on(
         self,
         event: list[str] | str,
-        batch: bool = False,
-        batch_window: int = 30,
         func: Callable | None = None,
         fork_type: ForkType = ForkType.PROCESS,
+        batch: bool = False,
+        batch_window: int = 30,
         queue_type: type[QueueInterface] = ProcessQueue,
     ) -> Callable:
         """
-        Registeres a listener on an event. Provided function will be called when a matching event emits.
-        """
-        if not event:
-            logger.error("No event provided to register listener on.")
-            raise Exception("No event provided to register listener on.")
+        Registers a listener on an event. Provided function will be called when a matching event emits.
 
+        Args:
+            event (list[str] | str): Event to match on. Can be a list of events to match on multiple.
+            func (Callable | None, optional): Function to call when event occurs. Defaults to None.
+            fork_type (ForkType, optional): How the function should be run, either in a new Thread or new Process.
+                                            Defaults to ForkType.PROCESS.
+            batch (bool, optional): Whether events should be batched. Defaults to False.
+            batch_window (int, optional): If batching, how many seconds to batch events for. Batching will wait for
+                                            this many seconds of no new events before processing the batched events.
+                                            Defaults to 30.
+            queue_type (type[QueueInterface], optional): Type of Queue to use to abtch events. Defaults to ProcessQueue.
+
+        Returns:
+            Callable: Returns the registered function, for use in decorators.
+        """
         if isinstance(event, str):
             event = [event]
 
@@ -83,14 +92,27 @@ class EventManager:
 
     def on_any(
         self,
-        batch: bool = False,
-        batch_window: int = 30,
         func: Callable | None = None,
         fork_type: ForkType = ForkType.PROCESS,
+        batch: bool = False,
+        batch_window: int = 30,
         queue_type: type[QueueInterface] = ProcessQueue,
     ) -> Callable:
         """
         Registers a function that listens to all events. Function will be run on all events in the system.
+
+        Args:
+            func (Callable | None, optional): Function to call when any event occurs. Defaults to None.
+            fork_type (ForkType, optional): How the function should be run, either in a new Thread or new Process.
+                                            Defaults to ForkType.PROCESS.
+            batch (bool, optional): Whether events should be batched. Defaults to False.
+            batch_window (int, optional): If batching, how many seconds to batch events for. Batching will wait for
+                                            this many seconds of no new events before processing the batched events.
+                                            Defaults to 30.
+            queue_type (type[QueueInterface], optional): Type of Queue to use to abtch events. Defaults to ProcessQueue.
+
+        Returns:
+            Callable: Returns the registered function, for use in decorators.
         """
 
         def _on_any(func: Callable) -> Callable:
@@ -124,6 +146,11 @@ class EventManager:
         Args:
             interval (timedelta): Timedelta object specifying the interval to run the function
             func (Callable): Function to call on a schedule
+            fork_type (ForkType, optional): How the function should be run, either in a new Thread or new Process.
+                                            Defaults to ForkType.PROCESS.
+
+        Returns:
+            Callable: Returns the registered function, for use in decorators.
         """
 
         def schedule(func: Callable) -> Callable:
@@ -143,6 +170,12 @@ class EventManager:
     def batch_listeners(self, event: str) -> list[Callable]:
         """
         Returns all batch listeners for the provided event.
+
+        Args:
+            event (str): Event to get batch listeners for.
+
+        Returns:
+            list[Callable]: List of batch listeners for the provided event.
         """
         return [
             listener.func for listener in self._event_tree.find_listeners(event) if isinstance(listener, BatchListener)
@@ -151,21 +184,33 @@ class EventManager:
     def listeners(self, event: str) -> list[Callable]:
         """
         Returns all functions that are registered to an event.
+
+        Args:
+            event (str): Event to get listeners for.
+
+        Returns:
+            list[Callable]: List of functions registered to the provided event.
         """
         return [listener.func for listener in self._event_tree.find_listeners(event)]
 
     def listeners_any(self) -> list[Callable]:
         """
         Returns all functions that are registered to any event.
+
+        Returns:
+            list[Callable]: List of functions registered to any event.
         """
         return [listener.func for listener in self._any_listeners]
 
-    def emit(self, event: str, *args, **kwargs) -> Future:
+    def emit(self, event: str, *args, **kwargs) -> list[Future]:
         """
         Emit an event into the system, calling all functions listening for the provided event.
 
         Args:
             event (str): Event to emit into the system.
+
+        Returns:
+            list[Future]: List of futures from the executed listeners.
         """
         listeners = self._event_tree.find_listeners(event=event)
 
@@ -174,23 +219,24 @@ class EventManager:
         logger.debug(f"{event} event emitted, executing on {len(listeners)} listener functions")
 
         # call listeners
+        futures = []
         for listener in listeners:
             if isinstance(listener, BatchListener):
                 if "data" in kwargs:
                     if listener.fork_type == ForkType.THREAD:
-                        listener(self.thread_pool, data=kwargs["data"])
+                        futures.append(listener(self.thread_pool, data=kwargs["data"]))
                     else:
-                        listener(self.process_pool, data=kwargs["data"])
+                        futures.append(listener(self.process_pool, data=kwargs["data"]))
                 else:
                     logger.error("BatchListener listener called without data.")
                     raise Exception("BatchListener listener called without data.")
             else:
                 if listener.fork_type == ForkType.THREAD:
-                    listener(self.thread_pool, args=args, kwargs=kwargs)
+                    futures.append(listener(self.thread_pool, args=args, kwargs=kwargs))
                 else:
-                    listener(self.process_pool, args=args, kwargs=kwargs)
+                    futures.append(listener(self.process_pool, args=args, kwargs=kwargs))
 
-        return listener.future  # pyright: ignore  -- Future is always set in the loop above
+        return futures
 
 
 class Node:

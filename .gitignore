@@ -5,6 +5,7 @@ __pycache__/
 .docs/
 junit/
 *.ipynb
+.ruff_cache/
 
 # C extensions
 *.so
