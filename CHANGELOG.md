@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/JeordyR/PyEventManager/compare/v0.4.0...v0.4.1) (2024-03-22)
+
+
+### Bug Fixes
+
+* fix queues not storing and retrieving data as expected ([74d74c0](https://github.com/JeordyR/PyEventManager/commit/74d74c097762ad4ea296ccd89350ecdbf00d981e))
+
 ## [0.4.0](https://github.com/JeordyR/PyEventManager/compare/v0.3.0...v0.4.0) (2024-03-22)
 
 
