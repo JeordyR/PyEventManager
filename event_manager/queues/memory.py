@@ -1,6 +1,8 @@
 import queue
 from datetime import datetime
-from multiprocessing.queues import Queue
+
+# from multiprocessing.queues import Queue
+from multiprocessing import Queue, get_context
 from typing import Any
 
 from event_manager.queues.base import QueueInterface
@@ -13,7 +15,6 @@ class ThreadQueue(QueueInterface, queue.SimpleQueue):
 
     def __init__(self, *args, **kwargs):
         self.last_updated: datetime | None = None
-
         super().__init__(*args, **kwargs)
 
     def __len__(self):
@@ -52,8 +53,7 @@ class ProcessQueue(QueueInterface, Queue):
 
     def __init__(self, *args, **kwargs):
         self.last_updated: datetime | None = None
-
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, ctx=get_context())
 
     def __len__(self):
         return self.qsize()
