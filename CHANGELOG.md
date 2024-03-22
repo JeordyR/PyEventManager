@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/JeordyR/PyEventManager/compare/v0.3.0...v0.4.0) (2024-03-22)
+
+
+### Features
+
+* rework back to using straight Process and Thread ([1c53443](https://github.com/JeordyR/PyEventManager/commit/1c53443d7f205d0b178ce35413742fe5bf48c44f))
+
 ## [0.3.0](https://github.com/JeordyR/PyEventManager/compare/v0.2.3...v0.3.0) (2024-03-22)
 
 
