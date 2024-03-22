@@ -24,8 +24,8 @@ For each listener type, there are multiple execution options determining how the
 * Add tests
 * Add support for async execution within an existing event loop
 * Add support for external data stores (redis, rabbitmq?, etc.) for persistence of event data / batching
+* Consider adding support for returning data from the listeners
 * ~~Fix up docstrings across the board~~
-* ~~Consider adding support for returning data from the listeners~~ (emit now returns a list of Futures that caller can wait on and get results from if they want)
 
 ---
 
