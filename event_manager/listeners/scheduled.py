@@ -1,10 +1,9 @@
 import logging
-import multiprocessing
-import threading
 from collections.abc import Callable
-from concurrent.futures import Executor, Future
 from datetime import timedelta
-from multiprocessing.synchronize import Event
+from multiprocessing import Event as MultiprocessingEventInit
+from multiprocessing.synchronize import Event as MultieprocessingEvent
+from threading import Event as ThreadingEvent
 
 from event_manager.fork_types import ForkType
 from event_manager.listeners.base import BaseListener
@@ -12,7 +11,7 @@ from event_manager.listeners.base import BaseListener
 logger = logging.getLogger("event_manager")
 
 
-def run(_interval: timedelta, _func: Callable, _event: Event | threading.Event, *args, **kwargs):
+def run(_interval: timedelta, _func: Callable, _event: MultieprocessingEvent | ThreadingEvent, *args, **kwargs):
     """
     Run the provided function on the provided interval.
 
@@ -21,6 +20,7 @@ def run(_interval: timedelta, _func: Callable, _event: Event | threading.Event, 
         _func (Callable): Function to run on schedule.
         _event (Event | threading.Event): Event to check for stop conditions.
     """
+    logger.info(f"Starting {_func.__name__} to run on schedule: {_interval}.")
     while not _event.wait(_interval.total_seconds()):
         logger.debug(f"Running {_func.__name__} on schedule.")
         _func(*args, **kwargs)
@@ -32,6 +32,7 @@ class ScheduledListener(BaseListener):
         interval: timedelta,
         func: Callable,
         fork_type: ForkType,
+        recursive: bool = False,
     ):
         """
         Class for a basic listener in the event management system.
@@ -45,12 +46,12 @@ class ScheduledListener(BaseListener):
         self.interval = interval
         self.func = func
         self.fork_type = fork_type
-        self.sync_event: Event | threading.Event = (
-            threading.Event() if fork_type == ForkType.THREAD else multiprocessing.Event()
+        self.recursive = recursive
+        self.sync_event: MultieprocessingEvent | ThreadingEvent = (
+            ThreadingEvent() if fork_type == ForkType.THREAD else MultiprocessingEventInit()
         )
-        self.future: Future | None = None
 
-    def __call__(self, pool: Executor, *args, **kwargs):
+    def __call__(self, *args, **kwargs):
         """
         Call invocation for the obejct, creates and runs a new fork with the stored function.
 
@@ -60,6 +61,7 @@ class ScheduledListener(BaseListener):
             pool (Executor): Executor to run the function in.
         """
         logger.debug(f"Executing {self.func.__name__}... Set to run every {self.interval.total_seconds()} seconds.")
+
         kwargs = {
             "_interval": self.interval,
             "_func": self.func,
@@ -67,7 +69,7 @@ class ScheduledListener(BaseListener):
             **kwargs,
         }
 
-        self.future = pool.submit(run, *args, **kwargs)
+        self.fork_type.value(target=run, daemon=not self.recursive, args=args, kwargs=kwargs).start()
 
     def stop(self):
         """

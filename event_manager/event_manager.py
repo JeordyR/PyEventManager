@@ -8,7 +8,6 @@ import collections
 import fnmatch
 import logging
 from collections.abc import Callable
-from concurrent.futures import Future, ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import timedelta
 
 from event_manager.fork_types import ForkType
@@ -37,10 +36,6 @@ class EventManager:
         self._any_listeners: list[BaseListener] = []
         self._scheduled_listeners: list[ScheduledListener] = []
 
-        # pools for execution
-        self.thread_pool = ThreadPoolExecutor()
-        self.process_pool = ProcessPoolExecutor()
-
     def on(
         self,
         event: list[str] | str,
@@ -49,6 +44,7 @@ class EventManager:
         batch: bool = False,
         batch_window: int = 30,
         queue_type: type[QueueInterface] = ProcessQueue,
+        recursive: bool = False,
     ) -> Callable:
         """
         Registers a listener on an event. Provided function will be called when a matching event emits.
@@ -63,6 +59,7 @@ class EventManager:
                                             this many seconds of no new events before processing the batched events.
                                             Defaults to 30.
             queue_type (type[QueueInterface], optional): Type of Queue to use to abtch events. Defaults to ProcessQueue.
+            recursive (bool, optional): If the listener will emit any events. Defaults to False.
 
         Returns:
             Callable: Returns the registered function, for use in decorators.
@@ -81,6 +78,7 @@ class EventManager:
                             func=func,
                             fork_type=fork_type,
                             queue_type=queue_type,
+                            recursive=recursive,
                         )
                     )
                 else:
@@ -97,6 +95,7 @@ class EventManager:
         batch: bool = False,
         batch_window: int = 30,
         queue_type: type[QueueInterface] = ProcessQueue,
+        recursive: bool = False,
     ) -> Callable:
         """
         Registers a function that listens to all events. Function will be run on all events in the system.
@@ -110,6 +109,7 @@ class EventManager:
                                             this many seconds of no new events before processing the batched events.
                                             Defaults to 30.
             queue_type (type[QueueInterface], optional): Type of Queue to use to abtch events. Defaults to ProcessQueue.
+            recursive (bool, optional): If the listener will emit any events. Defaults to False.
 
         Returns:
             Callable: Returns the registered function, for use in decorators.
@@ -125,6 +125,7 @@ class EventManager:
                         func=func,
                         fork_type=fork_type,
                         queue_type=queue_type,
+                        recursive=recursive,
                     )
                 )
             else:
@@ -139,6 +140,7 @@ class EventManager:
         interval: timedelta,
         func: Callable[[None], None] | None = None,
         fork_type: ForkType = ForkType.PROCESS,
+        recursive: bool = False,
     ) -> Callable:
         """
         Registers a scheduled function that will be executed on the specified interval.
@@ -148,6 +150,7 @@ class EventManager:
             func (Callable): Function to call on a schedule
             fork_type (ForkType, optional): How the function should be run, either in a new Thread or new Process.
                                             Defaults to ForkType.PROCESS.
+            recursive (bool, optional): If the listener will emit any events. Defaults to False.
 
         Returns:
             Callable: Returns the registered function, for use in decorators.
@@ -155,13 +158,8 @@ class EventManager:
 
         def schedule(func: Callable) -> Callable:
             logger.info(f"Scheduling {func.__name__} to run every {interval.total_seconds()} seconds.")
-            listener = ScheduledListener(interval=interval, func=func, fork_type=fork_type)
-
-            if fork_type == ForkType.THREAD:
-                listener(self.thread_pool)
-            else:
-                listener(self.process_pool)
-
+            listener = ScheduledListener(interval=interval, func=func, fork_type=fork_type, recursive=recursive)
+            listener()
             self._scheduled_listeners.append(listener)
             return func
 
@@ -202,7 +200,7 @@ class EventManager:
         """
         return [listener.func for listener in self._any_listeners]
 
-    def emit(self, event: str, *args, **kwargs) -> list[Future]:
+    def emit(self, event: str, *args, **kwargs):
         """
         Emit an event into the system, calling all functions listening for the provided event.
 
@@ -219,24 +217,20 @@ class EventManager:
         logger.debug(f"{event} event emitted, executing on {len(listeners)} listener functions")
 
         # call listeners
-        futures = []
         for listener in listeners:
-            if isinstance(listener, BatchListener):
-                if "data" in kwargs:
-                    if listener.fork_type == ForkType.THREAD:
-                        futures.append(listener(self.thread_pool, data=kwargs["data"]))
+            try:
+                if isinstance(listener, BatchListener):
+                    if "data" in kwargs:
+                        listener(data=kwargs["data"])
                     else:
-                        futures.append(listener(self.process_pool, data=kwargs["data"]))
+                        logger.error("BatchListener listener called without data.")
+                        raise Exception("BatchListener listener called without data.")
                 else:
-                    logger.error("BatchListener listener called without data.")
-                    raise Exception("BatchListener listener called without data.")
-            else:
-                if listener.fork_type == ForkType.THREAD:
-                    futures.append(listener(self.thread_pool, args=args, kwargs=kwargs))
-                else:
-                    futures.append(listener(self.process_pool, args=args, kwargs=kwargs))
-
-        return futures
+                    listener(*args, **kwargs)
+            except Exception as e:
+                print(f"Exception in emit: {e}")
+                logger.error(f"Error executing listener {listener.func.__name__} for event {event}.")
+                logger.error(e)
 
 
 class Node:
