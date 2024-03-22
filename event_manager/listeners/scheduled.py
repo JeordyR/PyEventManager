@@ -75,5 +75,5 @@ class ScheduledListener(BaseListener):
         """
         Stop the scheduled listener.
         """
-        self.sync_event.set()
         logger.debug(f"Stopping {self.func.__name__} from running on schedule.")
+        self.sync_event.set()

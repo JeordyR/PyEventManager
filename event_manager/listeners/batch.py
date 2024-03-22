@@ -23,6 +23,8 @@ def batch_input(batch_window: int, queue: QueueInterface, callback: Callable):
         queue (QueueInterface): Queue used to batch up the events.
         callback (Callable): Function to call to process the events.
     """
+    logger.debug(f"Starting batch input for {callback.__name__}...")
+
     while True:
         time.sleep(batch_window)
 
@@ -39,6 +41,7 @@ def batch_input(batch_window: int, queue: QueueInterface, callback: Callable):
                     f"Batch data updated too recently for func {callback.__name__}, waiting {batch_window} seconds."
                 )
 
+    logger.debug(f"Batching complete for {callback.__name__}, executing...")
     callback(queue.get_all())
 
 
