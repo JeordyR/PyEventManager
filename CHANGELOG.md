@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/JeordyR/PyEventManager/compare/v0.2.1...v0.2.2) (2024-03-22)
+
+
+### Bug Fixes
+
+* fix instantiation of multiprocessing Queue to include ctx ([5e43b90](https://github.com/JeordyR/PyEventManager/commit/5e43b9009e382202c98f63ea86b2c505d46a200c))
+
 ## [0.2.1](https://github.com/JeordyR/PyEventManager/compare/v0.2.0...v0.2.1) (2024-03-22)
 
 
