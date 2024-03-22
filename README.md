@@ -63,7 +63,6 @@ Install via [pip](https://pypi.python.org/pypi/pyeventmanager)
         ...
 
     # Register a simple listener using callback syntax
-
     def also_handle_some_event(data: MyDataType):
         ...
 
