@@ -229,7 +229,8 @@ event_manager    </h1>
     <span class="n">em</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s2">&quot;somecategory.event&quot;</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="n">also_handle_some_event</span><span class="p">)</span>
 
     <span class="c1"># Emit an event passing data</span>
-    <span class="c1">## *args, **kwargs are passed through to listener, so any fields can be used as long as the matching listener accepts the same</span>
+    <span class="c1">## *args, **kwargs are passed through to listener,</span>
+    <span class="c1">##  so any fields can be used as long as the matching listener accepts the same</span>
     <span class="n">em</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s2">&quot;somecategory.event&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">MyDataType</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
 
     <span class="c1"># Emit an event, wait for jobs to finish, and get the results</span>
