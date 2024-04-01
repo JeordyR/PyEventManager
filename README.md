@@ -70,7 +70,8 @@ Install via [pip](https://pypi.python.org/pypi/pyeventmanager)
     em.on(event="somecategory.event", func=also_handle_some_event)
 
     # Emit an event passing data
-    ## *args, **kwargs are passed through to listener, so any fields can be used as long as the matching listener accepts the same
+    ## *args, **kwargs are passed through to listener,
+    ##  so any fields can be used as long as the matching listener accepts the same
     em.emit(event="somecategory.event", data=MyDataType(...))
 
     # Emit an event, wait for jobs to finish, and get the results
