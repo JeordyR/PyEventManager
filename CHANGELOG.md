@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.0](https://github.com/JeordyR/PyEventManager/compare/v0.4.1...v1.0.0) (2024-04-01)
+## [0.5.0](https://github.com/JeordyR/PyEventManager/compare/v0.4.1...v1.0.0) (2024-04-01)
 
 
 ### ⚠ BREAKING CHANGES
