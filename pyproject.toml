@@ -1,6 +1,6 @@
 [project]
 name = "pyeventmanager"
-version = "0.4.1"
+version = "0.5.0"
 authors = [{ name = "Jeordy", email = "JeordyR@users.noreply.github.com" }]
 description = "Event management system for Python with support for Threading and Multiprocessing for task running."
 readme = "README.md"
