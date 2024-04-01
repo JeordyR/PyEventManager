@@ -32,7 +32,6 @@ class ScheduledListener(BaseListener):
         interval: timedelta,
         func: Callable,
         fork_type: ForkType,
-        recursive: bool = False,
     ):
         """
         Class for a basic listener in the event management system.
@@ -46,7 +45,6 @@ class ScheduledListener(BaseListener):
         self.interval = interval
         self.func = func
         self.fork_type = fork_type
-        self.recursive = recursive
         self.sync_event: MultieprocessingEvent | ThreadingEvent = (
             ThreadingEvent() if fork_type == ForkType.THREAD else MultiprocessingEventInit()
         )
@@ -69,7 +67,7 @@ class ScheduledListener(BaseListener):
             **kwargs,
         }
 
-        self.fork_type.value(target=run, daemon=not self.recursive, args=args, kwargs=kwargs).start()
+        self.fork_type.value(target=run, daemon=False, args=args, kwargs=kwargs).start()
 
     def stop(self):
         """

@@ -32,9 +32,9 @@ class ThreadQueue(QueueInterface, ThreadQueueBase):
 
         ThreadQueueBase.put(self, *args, **kwargs)
 
-    def get(self) -> Any:
+    def get(self, block: bool = False) -> Any:
         """Get an item from the queue."""
-        return ThreadQueueBase.get(self)
+        return ThreadQueueBase.get(self, block=block)
 
     def get_all(self) -> list[Any]:
         """
@@ -74,9 +74,9 @@ class ProcessQueue(QueueInterface, ProcessingQueueBase):
 
         ProcessingQueueBase.put(self, *args, **kwargs)
 
-    def get(self) -> Any:
+    def get(self, block: bool = False) -> Any:
         """Get an item from the queue."""
-        return ProcessingQueueBase.get(self)
+        return ProcessingQueueBase.get(self, block=block)
 
     def get_all(self) -> list[Any]:
         """

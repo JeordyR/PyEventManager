@@ -6,6 +6,8 @@ PyEventManager is a simple event-based routing package allowing code to be struc
 
 Instead of calling functions directly, you can emit an event and have one or more functions (listeners) configured to listen on that event execute. These listeners can currently be run either in a new thread or a new process, allowing the creation of background tasks for long-running jobs off an API event, for example.
 
+Wrapped listeners return a [Future](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future) that can be waited on to recieve the response(s) back from the listener.
+
 There are multiple execution options when registering a listener:
 
 * **Simple**: Execute the function (listener) when the specified event is emitted.
@@ -24,8 +26,7 @@ For each listener type, there are multiple execution options determining how the
 * Add tests
 * Add support for async execution within an existing event loop
 * Add support for external data stores (redis, rabbitmq?, etc.) for persistence of event data / batching
-* Consider adding support for returning data from the listeners
-* ~~Fix up docstrings across the board~~
+
 
 ---
 
@@ -53,7 +54,7 @@ Install via [pip](https://pypi.python.org/pypi/pyeventmanager)
         ...
 
     # Register a function to handle all events in the system
-    @em.on_all()
+    @em.on(event="*")
     def handle_all_events(data: Any):
         ...
 
@@ -68,7 +69,8 @@ Install via [pip](https://pypi.python.org/pypi/pyeventmanager)
 
     em.on(event="somecategory.event", func=also_handle_some_event)
 
-    # Emit an event without worrying about response
+    # Emit an event passing data
+    ## *args, **kwargs are passed through to listener, so any fields can be used as long as the matching listener accepts the same
     em.emit(event="somecategory.event", data=MyDataType(...))
 
     # Emit an event, wait for jobs to finish, and get the results
@@ -89,17 +91,19 @@ Install via [pip](https://pypi.python.org/pypi/pyeventmanager)
 
     # Use Threading instead of Processing
     @em.on(event="something.*", fork_type=ForkType.THREAD)
+    def handle_something():
+        ...
+```
 
 ### Batch Listener
 
-.. code-block:: python
-
+```python
     from event_manager import EventManager, ForkType, ThreadQueue
 
     em = EventManager()
 
     # Batch all data for `category.some_event` until no new events occur for 60 seconds
-    @em.on(event="category.some_event", batch=True, batch_window=60)
+    @em.on_batch(event="category.some_event", batch_idle_window=60)
     def handle_some_event_batch(data: list[MyDataType]):
         ...
 
@@ -108,10 +112,14 @@ Install via [pip](https://pypi.python.org/pypi/pyeventmanager)
     @em.on(
         event="category.some_event",
         fork_type=ForkType.THREAD,
-        batch=True,
-        batch_window=60,
+        batch_idle_window=60,
         queue_type=ThreadQueue,
     )
+    def handle_some_event_batch(data: list[MyDataType]):
+        ...
+
+    # Batch data until 30 seconds pass, or 20 events come through, whichever happends first
+    @em.on_batch(event="category.some_event", batch_count=20, batch_window=30)
     def handle_some_event_batch(data: list[MyDataType]):
         ...
 ```
@@ -136,11 +144,11 @@ Interval is defined using a [datetime.timedelta](https://docs.python.org/3/libra
     @em.schedule(interval=timedelta(hours=1))
     def run_hourly():
         ...
+```
 
 ### Using A Custom Queue for Batch Listener
 
-.. code-block:: python
-
+```python
     from datetime import datetime
     from typing import Any
 
@@ -187,8 +195,7 @@ Interval is defined using a [datetime.timedelta](https://docs.python.org/3/libra
     # Add a batched listener and pass in our custom Queue implementation
     @em.on(
         event="category.some_event",
-        batch=True,
-        batch_window=60,
+        batch_idle_window=60,
         queue_type=MyCustomQueue,
     )
     def handle_batch_process(data: list[Any]):
@@ -198,8 +205,7 @@ Interval is defined using a [datetime.timedelta](https://docs.python.org/3/libra
     @em.on(
         event="category.some_event",
         fork_type=ForkType.THREAD,
-        batch=True,
-        batch_window=60,
+        batch_idle_window=60,
         queue_type=MyCustomQueue,
     )
     def handle_batch_process(data: list[Any]):

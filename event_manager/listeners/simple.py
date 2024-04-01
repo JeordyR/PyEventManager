@@ -1,6 +1,7 @@
 import inspect
 import logging
 from collections.abc import Callable
+from concurrent.futures import Future
 
 from event_manager.fork_types import ForkType
 from event_manager.listeners.base import BaseListener
@@ -8,8 +9,26 @@ from event_manager.listeners.base import BaseListener
 logger = logging.getLogger("event_manager")
 
 
+def _wrapper(_func: Callable, _future: Future, *args, **kwargs):
+    """
+    Wrapper function to run the function and store the result in the future.
+
+    Args:
+        _func (Callable): Function to run.
+        _future (Future): Future to store the result in.
+    """
+    if _future.set_running_or_notify_cancel():
+        try:
+            if inspect.getfullargspec(_func).args or inspect.getfullargspec(_func).kwonlyargs:
+                _future.set_result(_func(*args, **kwargs))
+            else:
+                _future.set_result(_func())
+        except Exception as e:
+            _future.set_exception(e)
+
+
 class Listener(BaseListener):
-    def __init__(self, event: str, func: Callable, fork_type: ForkType, recursive: bool = False):
+    def __init__(self, event: str, func: Callable, fork_type: ForkType):
         """
         Class for a basic listener in the event management system.
 
@@ -21,9 +40,8 @@ class Listener(BaseListener):
         self.func = func
         self.event = event
         self.fork_type = fork_type
-        self.recursive = recursive
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> Future:
         """
         Call invocation for the obejct, creates and runs a new fork with the stored function.
 
@@ -34,7 +52,17 @@ class Listener(BaseListener):
         """
         logger.debug(f"Listener running func: {self.func.__name__}")
 
-        if inspect.getfullargspec(self.func).args or inspect.getfullargspec(self.func).kwonlyargs:
-            self.fork_type.value(target=self.func, daemon=not self.recursive, args=args, kwargs=kwargs).start()
-        else:
-            self.fork_type.value(target=self.func, daemon=not self.recursive).start()
+        future = Future()
+
+        self.fork_type.value(
+            target=_wrapper,
+            daemon=False,
+            args=args,
+            kwargs={
+                "_func": self.func,
+                "_future": future,
+                **kwargs,
+            },
+        ).start()
+
+        return future
