@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/JeordyR/PyEventManager/compare/v0.4.1...v1.0.0) (2024-04-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* Added support for responses using Futures, changed EventManager to be static implementation.
+
+### Features
+
+* Added support for responses using Futures, changed EventManager to be static implementation. ([2f27db5](https://github.com/JeordyR/PyEventManager/commit/2f27db5f92fe5a827071a69112893ba09ea69474))
+
 ## [0.4.1](https://github.com/JeordyR/PyEventManager/compare/v0.4.0...v0.4.1) (2024-03-22)
 
 
