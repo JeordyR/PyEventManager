@@ -1,21 +1,20 @@
 import inspect
-from abc import ABC, abstractmethod
 from collections.abc import Callable
 from concurrent.futures import Future
+from typing import Protocol
 
 from event_manager.fork_types import ForkType
 
 
-class BaseListener(ABC):
+class BaseListener(Protocol):
     """
     An abstract class that represents a listener. It should not be used directly, but through its concrete subclasses.
     """
 
-    func: Callable
     event: str
     fork_type: ForkType
+    func: Callable
 
-    @abstractmethod
     def __call__(self, *args, **kwargs) -> Future:
         raise NotImplementedError()
 

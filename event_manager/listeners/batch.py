@@ -8,7 +8,7 @@ from threading import Thread
 from typing import Any
 
 from event_manager.fork_types import ForkType
-from event_manager.listeners.base import BaseListener, _wrapper
+from event_manager.listeners.base import _wrapper
 from event_manager.queues.base import QueueInterface
 from event_manager.queues.memory import ProcessQueue, ThreadQueue
 
@@ -63,7 +63,7 @@ def batch_input(batch_count: int, batch_idle_window: int, batch_window: int, que
         return callback(queue.get_all())
 
 
-class BatchListener(BaseListener):
+class BatchListener:
     """
     A class representing a threaded batch listener in the event management system.
     """

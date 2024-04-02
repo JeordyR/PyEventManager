@@ -4,7 +4,6 @@ from collections.abc import Callable
 from concurrent.futures import Future
 
 from event_manager.fork_types import ForkType
-from event_manager.listeners.base import BaseListener
 
 logger = logging.getLogger("event_manager")
 
@@ -27,7 +26,7 @@ def _wrapper(_func: Callable, _future: Future, *args, **kwargs):
             _future.set_exception(e)
 
 
-class Listener(BaseListener):
+class Listener:
     def __init__(self, event: str, func: Callable, fork_type: ForkType):
         """
         Class for a basic listener in the event management system.
@@ -37,9 +36,9 @@ class Listener(BaseListener):
             func (Callable): Function to call when listener triggers on a matching event.
             fork_type (ForkType, optional): Type of fork to use when running the function. Defaults to PROCESS.
         """
-        self.func = func
         self.event = event
         self.fork_type = fork_type
+        self.func = func
 
     def __call__(self, *args, **kwargs) -> Future:
         """

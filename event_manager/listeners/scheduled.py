@@ -6,7 +6,6 @@ from multiprocessing.synchronize import Event as MultieprocessingEvent
 from threading import Event as ThreadingEvent
 
 from event_manager.fork_types import ForkType
-from event_manager.listeners.base import BaseListener
 
 logger = logging.getLogger("event_manager")
 
@@ -26,7 +25,7 @@ def run(_interval: timedelta, _func: Callable, _event: MultieprocessingEvent | T
         _func(*args, **kwargs)
 
 
-class ScheduledListener(BaseListener):
+class ScheduledListener:
     def __init__(
         self,
         interval: timedelta,
