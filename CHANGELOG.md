@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/JeordyR/PyEventManager/compare/v0.5.0...v0.5.1) (2024-04-02)
+
+
+### Bug Fixes
+
+* update interfaces to use Protocol instead of abc ([d028702](https://github.com/JeordyR/PyEventManager/commit/d0287024b52ef6f13ebb2a7b560b4e23496316a3))
+
 ## [0.5.0](https://github.com/JeordyR/PyEventManager/compare/v0.4.1...v1.0.0) (2024-04-01)
 
 
