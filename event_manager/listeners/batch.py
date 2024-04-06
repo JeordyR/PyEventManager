@@ -37,10 +37,10 @@ def batch_input(batch_count: int, batch_idle_window: int, batch_window: int, que
 
         logger.debug(f"{callback.__name__}: {queue.last_updated=}")
 
-        if len(queue) >= batch_count:
+        if batch_count > 0 and len(queue) >= batch_count:
             print("breaking for batch count...")
             break
-        elif batch_idle_window and queue.last_updated:
+        elif batch_idle_window > 0 and queue.last_updated:
             since_last = datetime.now() - queue.last_updated
             since_last = since_last.seconds
             logger.debug(f"{callback.__name__}: {since_last=}")
@@ -53,7 +53,7 @@ def batch_input(batch_count: int, batch_idle_window: int, batch_window: int, que
                 logger.info(
                     f"Batch data updated too recently for func {callback.__name__}, waiting {batch_window} seconds."
                 )
-        elif batch_window and batch_window <= elapsed:
+        elif batch_window > 0 and batch_window <= elapsed:
             print("breaking for batch window...")
             break
 

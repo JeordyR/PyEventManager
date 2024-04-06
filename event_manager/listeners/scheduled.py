@@ -66,7 +66,7 @@ class ScheduledListener:
             **kwargs,
         }
 
-        self.fork_type.value(target=run, daemon=False, args=args, kwargs=kwargs).start()
+        self.fork_type.value(target=run, daemon=True, args=args, kwargs=kwargs).start()
 
     def stop(self):
         """

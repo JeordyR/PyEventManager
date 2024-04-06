@@ -24,8 +24,9 @@ class EventManager:
     _event_tree = Tree()
     _scheduled_listeners: list[ScheduledListener] = []
 
-    @staticmethod
+    @classmethod
     def on(
+        cls,
         event: list[str] | str,
         func: Callable | None = None,
         fork_type: ForkType = ForkType.PROCESS,
@@ -36,14 +37,15 @@ class EventManager:
         def _on(func: Callable) -> Callable:
             for e in event:
                 logger.info(f"Registered function {func.__name__} to run on {e} event.")
-                EventManager._event_tree.add_data(name=e, data=Listener(func=func, event=e, fork_type=fork_type))
+                cls._event_tree.add_data(name=e, data=Listener(func=func, event=e, fork_type=fork_type))
 
             return func
 
         return _on(func) if func else _on
 
-    @staticmethod
+    @classmethod
     def on_batch(
+        cls,
         event: list[str] | str,
         func: Callable | None = None,
         fork_type: ForkType = ForkType.PROCESS,
@@ -58,7 +60,7 @@ class EventManager:
         def _on_batch(func: Callable) -> Callable:
             for e in event:
                 logger.info(f"Registered function {func.__name__} to run on {e} event.")
-                EventManager._event_tree.add_data(
+                cls._event_tree.add_data(
                     name=e,
                     data=BatchListener(
                         event=e,
@@ -75,8 +77,9 @@ class EventManager:
 
         return _on_batch(func) if func else _on_batch
 
-    @staticmethod
+    @classmethod
     def schedule(
+        cls,
         interval: timedelta,
         func: Callable[[None], None] | None = None,
         fork_type: ForkType = ForkType.PROCESS,
@@ -97,13 +100,13 @@ class EventManager:
             logger.info(f"Scheduling {func.__name__} to run every {interval.total_seconds()} seconds.")
             listener = ScheduledListener(interval=interval, func=func, fork_type=fork_type)
             listener()
-            EventManager._scheduled_listeners.append(listener)
+            cls._scheduled_listeners.append(listener)
             return func
 
         return schedule(func) if func else schedule
 
-    @staticmethod
-    def listeners(event: str) -> list[Callable]:
+    @classmethod
+    def listeners(cls, event: str) -> list[Callable]:
         """
         Returns all functions that are registered to an event.
 
@@ -113,10 +116,10 @@ class EventManager:
         Returns:
             list[Callable]: List of functions registered to the provided event.
         """
-        return [listener.func for listener in EventManager._event_tree.find_data(event)]
+        return [listener.func for listener in cls._event_tree.find_data(event)]
 
-    @staticmethod
-    def emit(event: str, *args, **kwargs) -> list[Future]:
+    @classmethod
+    def emit(cls, event: str, *args, **kwargs) -> list[Future]:
         """
         Emit an event into the system, calling all functions listening for the provided event.
 
@@ -126,7 +129,7 @@ class EventManager:
         Returns:
             list[Future]: List of futures from the executed listeners.
         """
-        listeners = EventManager._event_tree.find_data(name=event)
+        listeners = cls._event_tree.find_data(name=event)
 
         logger.debug(f"{event} event emitted, executing on {len(listeners)} listener functions")
 

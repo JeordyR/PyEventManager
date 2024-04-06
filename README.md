@@ -23,6 +23,7 @@ For each listener type, there are multiple execution options determining how the
 
 ## Todo
 
+* Clean up/improve docstrings
 * Add tests
 * Add support for async execution within an existing event loop
 * Add support for external data stores (redis, rabbitmq?, etc.) for persistence of event data / batching

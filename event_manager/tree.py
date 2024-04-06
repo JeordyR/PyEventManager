@@ -4,8 +4,8 @@ from typing import Any
 
 
 class Node:
-    @classmethod
-    def str_is_pattern(cls, s: str) -> bool:
+    @staticmethod
+    def str_is_pattern(s: str) -> bool:
         """
         Check if the provided string is a pattern or not.
 
