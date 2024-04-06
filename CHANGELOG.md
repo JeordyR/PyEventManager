@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/JeordyR/PyEventManager/compare/v0.5.2...v0.5.3) (2024-04-06)
+
+
+### Bug Fixes
+
+* remove prints and a few debug logs from batch listener ([37999a3](https://github.com/JeordyR/PyEventManager/commit/37999a3c5d83884d1ecc11157448fb251d9752c2))
+
 ## [0.5.2](https://github.com/JeordyR/PyEventManager/compare/v0.5.1...v0.5.2) (2024-04-06)
 
 
