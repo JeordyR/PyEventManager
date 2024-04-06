@@ -24,21 +24,18 @@ def batch_input(batch_count: int, batch_idle_window: int, batch_window: int, que
         queue (QueueInterface): Queue used to batch up the events.
         callback (Callable): Function to call to process the events.
     """
-    print("starting...")
     logger.debug(f"Starting batch input for {callback.__name__}...")
 
-    sleep_time = 1 if batch_window else batch_idle_window
+    sleep_time = batch_idle_window if batch_idle_window > 0 else 1
     elapsed = 0
 
     while True:
-        print("looping...")
         time.sleep(sleep_time)
         elapsed += 1
 
         logger.debug(f"{callback.__name__}: {queue.last_updated=}")
 
         if batch_count > 0 and len(queue) >= batch_count:
-            print("breaking for batch count...")
             break
         elif batch_idle_window > 0 and queue.last_updated:
             since_last = datetime.now() - queue.last_updated
@@ -46,15 +43,12 @@ def batch_input(batch_count: int, batch_idle_window: int, batch_window: int, que
             logger.debug(f"{callback.__name__}: {since_last=}")
 
             if since_last > batch_idle_window:
-                print("breaking for idle window...")
                 break
             else:
-                print("waiting for idle window...")
                 logger.info(
                     f"Batch data updated too recently for func {callback.__name__}, waiting {batch_window} seconds."
                 )
         elif batch_window > 0 and batch_window <= elapsed:
-            print("breaking for batch window...")
             break
 
     logger.debug(f"Batching complete for {callback.__name__}, executing...")
