@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/JeordyR/PyEventManager/compare/v0.5.1...v0.5.2) (2024-04-06)
+
+
+### Bug Fixes
+
+* fix batch to handle 0 batch_count, EventManager methods to classmethods, schedule listener to daemon ([c503205](https://github.com/JeordyR/PyEventManager/commit/c5032051d44e561734a4797d43cde1f3a07be3eb))
+
 ## [0.5.1](https://github.com/JeordyR/PyEventManager/compare/v0.5.0...v0.5.1) (2024-04-02)
 
 
