@@ -42,11 +42,11 @@ def batch_input(batch_count: int, batch_idle_window: int, batch_window: int, que
             since_last = since_last.seconds
             logger.debug(f"{callback.__name__}: {since_last=}")
 
-            if since_last > batch_idle_window:
+            if since_last >= batch_idle_window:
                 break
             else:
                 logger.info(
-                    f"Batch data updated too recently for func {callback.__name__}, waiting {batch_window} seconds."
+                    f"Batch data updated too recently for {callback.__name__}, waiting {batch_idle_window} seconds."
                 )
         elif batch_window > 0 and batch_window <= elapsed:
             break
