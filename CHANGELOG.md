@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.6](https://github.com/JeordyR/PyEventManager/compare/v0.5.5...v0.5.6) (2024-04-07)
+
+
+### Bug Fixes
+
+* correct batch_idle_window check to &gt;= match ([bdf6b19](https://github.com/JeordyR/PyEventManager/commit/bdf6b193d839bf85813fa9cd5160ed20c7d16ad4))
+
 ## [0.5.5](https://github.com/JeordyR/PyEventManager/compare/v0.5.4...v0.5.5) (2024-04-07)
 
 
