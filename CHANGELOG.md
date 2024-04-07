@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.5](https://github.com/JeordyR/PyEventManager/compare/v0.5.4...v0.5.5) (2024-04-07)
+
+
+### Bug Fixes
+
+* add log when listener raises exception ([88ca42e](https://github.com/JeordyR/PyEventManager/commit/88ca42e218b30fcdb7b2882c6b5712ce156b896e))
+
 ## [0.5.4](https://github.com/JeordyR/PyEventManager/compare/v0.5.3...v0.5.4) (2024-04-07)
 
 
