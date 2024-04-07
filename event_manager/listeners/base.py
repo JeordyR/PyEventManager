@@ -1,9 +1,12 @@
 import inspect
+import logging
 from collections.abc import Callable
 from concurrent.futures import Future
 from typing import Protocol
 
 from event_manager.fork_types import ForkType
+
+logger = logging.getLogger("event_manager")
 
 
 class BaseListener(Protocol):
@@ -34,4 +37,5 @@ def _wrapper(_func: Callable, _future: Future, *args, **kwargs):
             else:
                 _future.set_result(_func())
         except Exception as e:
+            logger.error(f"Listener {_func.__name__} raised exception: {e}")
             _future.set_exception(e)
