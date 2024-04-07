@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.4](https://github.com/JeordyR/PyEventManager/compare/v0.5.3...v0.5.4) (2024-04-07)
+
+
+### Bug Fixes
+
+* remove broken condition on batch call/return of callback ([55717f9](https://github.com/JeordyR/PyEventManager/commit/55717f99c41fce26b52b51cd50ff633445a113c0))
+
 ## [0.5.3](https://github.com/JeordyR/PyEventManager/compare/v0.5.2...v0.5.3) (2024-04-06)
 
 
