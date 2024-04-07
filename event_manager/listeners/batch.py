@@ -52,9 +52,7 @@ def batch_input(batch_count: int, batch_idle_window: int, batch_window: int, que
             break
 
     logger.debug(f"Batching complete for {callback.__name__}, executing...")
-
-    if batch_count > 0:
-        return callback(queue.get_all())
+    return callback(queue.get_all())
 
 
 class BatchListener:
