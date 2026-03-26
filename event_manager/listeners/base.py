@@ -4,7 +4,7 @@ from collections.abc import Callable
 from concurrent.futures import Future
 from typing import Protocol
 
-from event_manager.fork_types import ForkType
+from event_manager.models import EventModel
 
 logger = logging.getLogger("event_manager")
 
@@ -14,15 +14,14 @@ class BaseListener(Protocol):
     An abstract class that represents a listener. It should not be used directly, but through its concrete subclasses.
     """
 
-    event: str
-    fork_type: ForkType
+    event: str | type[EventModel]
     func: Callable
 
-    def __call__(self, *args, **kwargs) -> Future:
+    def __call__(self, event: EventModel) -> Future:
         raise NotImplementedError()
 
 
-def _wrapper(_func: Callable, _future: Future, *args, **kwargs):
+def _wrapper(_func: Callable, _future: Future, event: EventModel):
     """
     Wrapper function to run the function and store the result in the future.
 
@@ -32,8 +31,8 @@ def _wrapper(_func: Callable, _future: Future, *args, **kwargs):
     """
     if _future.set_running_or_notify_cancel():
         try:
-            if inspect.getfullargspec(_func).args or inspect.getfullargspec(_func).kwonlyargs:
-                _future.set_result(_func(*args, **kwargs))
+            if inspect.getfullargspec(_func).args:
+                _future.set_result(_func(event))
             else:
                 _future.set_result(_func())
         except Exception as e:

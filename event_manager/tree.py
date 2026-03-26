@@ -1,6 +1,7 @@
 import collections
 import fnmatch
-from typing import Any
+
+from event_manager.listeners.base import BaseListener
 
 
 class Node:
@@ -25,15 +26,15 @@ class Node:
             name (str): Name of the node
         """
         self.name: str = name
-        self.parent: "Node | Tree | None" = None
-        self.children: collections.OrderedDict[str, "Node"] = collections.OrderedDict()
-        self.data: list[Any] = []
+        self.parent: Node | Tree | None = None
+        self.children: collections.OrderedDict[str, Node] = collections.OrderedDict()
+        self.listeners: list[BaseListener] = []
 
     def add_child(self, node: "Node") -> "Node":
         """
         Add a child to the node.
 
-        If an existing child already exists with the same name, will add the data from the provided node to
+        If an existing child already exists with the same name, will add the listener from the provided node to
         the existing one.
 
         Args:
@@ -46,8 +47,8 @@ class Node:
         if node.name in self.children:
             _node = self.children[node.name]
 
-            for data in node.data:
-                _node.add_data(name=_node.name, data=data)
+            for listener in node.listeners:
+                _node.add_listener(node_name=_node.name, listener=listener)
 
             return _node
         # Add it and set its parent
@@ -56,15 +57,16 @@ class Node:
             node.parent = self
             return node
 
-    def add_data(self, name: str, data: Any):
+    def add_listener(self, node_name: str, listener: BaseListener):
         """
-        Add data to this node.
+        Add listener to this node.
 
         Args:
+            node_name (str): Name of the node to add listener to
             listener (BaseListener): Listener to add to the node
         """
-        if data not in self.data:
-            self.data.append(data)
+        if listener not in self.listeners:
+            self.listeners.append(listener)
 
     def check_name(self, pattern: str) -> bool:
         """
@@ -117,7 +119,7 @@ class Node:
 class Tree:
     def __init__(self):
         """
-        A tree storing Nodes for mapping names to data.
+        A tree storing Nodes for mapping event names to listeners.
         """
         self.children: collections.OrderedDict[str, Node] = collections.OrderedDict()
 
@@ -132,17 +134,17 @@ class Tree:
         """
         return sum((node.find_nodes(name=name) for node in self.children.values()), [])
 
-    def add_data(self, name: str, data: Any) -> None:
+    def add_listener(self, node_name: str, listener: BaseListener) -> None:
         """
-        Add a data point to the tree. Either add a new Node to the tree or add the data into
+        Add a listener to the tree. Either add a new Node to the tree or add the listener into
         the tree at the appropriate Node if it already exists.
 
         Args:
-            name (str): Name of the node to add the data to.
-            data (Any): Data to add to the tree.
+            node_name (str): Name of the node to add the data to.
+            listener (BaseListener): Listener to add to the tree.
         """
         # add nodes without evaluating wildcards, this is done during node lookup only
-        names = name.split(".")
+        names = node_name.split(".")
         _name = names[0]
 
         # lookup the deepest existing parent
@@ -157,7 +159,7 @@ class Tree:
                 node = new_node
 
         # add the data
-        node.add_data(name=_name, data=data)
+        node.add_listener(node_name=_name, listener=listener)
 
     def add_child(self, node: Node) -> Node:
         """
@@ -173,7 +175,7 @@ class Tree:
         # Merge data when existing node with same name is present
         if node.name in self.children:
             _node = self.children[node.name]
-            _node.data.extend(node.data)
+            _node.listeners.extend(node.listeners)
             return _node
         # Add it and set its parent
         else:
@@ -181,14 +183,15 @@ class Tree:
             node.parent = self
             return node
 
-    def find_data(self, name: str) -> list[Any]:
+    def find_listeners(self, name: str) -> list[BaseListener]:
         """
-        Get all data entries from the nodes that match the provided name.
+        Get all listeners from the nodes that match the provided event name.
 
         Args:
-            name (str): Name to match against.
+            name (str): Event name/pattern to match against.
 
         Returns:
-            list[Any]: List of all data items that match the provided name.
+            list[BaseListener]: List of all listeners that match the provided event name/pattern.
         """
-        return sum((node.data for node in self.find_nodes(name)), [])
+        all_listeners = sum((node.listeners for node in self.find_nodes(name)), [])
+        return list(set(all_listeners))

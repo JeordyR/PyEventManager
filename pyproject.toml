@@ -1,20 +1,25 @@
 [project]
 name = "pyeventmanager"
-version = "0.5.6"
+version = "0.6.0"
 authors = [{ name = "Jeordy", email = "JeordyR@users.noreply.github.com" }]
-description = "Event management system for Python with support for Threading and Multiprocessing for task running."
+description = "Pydantic-based event management system for Python."
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
 ]
-dependencies = []
+dependencies = ["pydantic>=2.12.5"]
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.11.1,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "event_manager"
+module-root = ""
 
 [project.urls]
 Documentation = "https://event-manager.jeofi.com"
@@ -22,19 +27,29 @@ Homepage = "https://event-manager.jeofi.com"
 Repository = "https://github.com/JeordyR/PyEventManager"
 Issues = "https://github.com/JeordyR/PyEventManager/issues"
 
-[tool.hatch.build.targets.wheel]
-packages = ["event_manager"]
+[dependency-groups]
+docs = ["pdoc>=16.0.0"]
+test = [
+    "coverage>=7.13.5",
+    "mypy>=1.19.1",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.8",
+]
 
-[tool.hatch.envs.default]
-path = ".venv"
-dependencies = ["pytest", "pytest-cov", "mypy", "ruff", "coverage", "pdoc"]
+# [tool.hatch.build.targets.wheel]
+# packages = ["event_manager"]
 
-[tool.hatch.envs.default.scripts]
-test = "pytest {args:tests}"
-test-cov = "pytest --doctest-modules --cov=event_manager {args:tests}"
-test-report = "pytest --doctest-modules --junit-xml=junit/test-results.xml --cov=event_manager --cov-report=xml --cov-report=html"
-docs-build = "python -m pdoc event_manager --docformat google -o ./docs"
-docs-live = "python -m pdoc event_manager --docformat google"
+# [tool.hatch.envs.default]
+# path = ".venv"
+# dependencies = ["pytest", "pytest-cov", "mypy", "ruff", "coverage", "pdoc"]
+
+# [tool.hatch.envs.default.scripts]
+# test = "pytest {args:tests}"
+# test-cov = "pytest --doctest-modules --cov=event_manager {args:tests}"
+# test-report = "pytest --doctest-modules --junit-xml=junit/test-results.xml --cov=event_manager --cov-report=xml --cov-report=html"
+# docs-build = "python -m pdoc event_manager --docformat google -o ./docs"
+# docs-live = "python -m pdoc event_manager --docformat google"
 
 [tool.coverage.run]
 branch = true
@@ -74,10 +89,11 @@ select = [
 ]
 ignore = ["B006"]
 
-[tool.hatch.envs.style]
-detached = true
-dependencies = ["ruff"]
 
-[tool.hatch.envs.style.scripts]
-check = ["ruff check . --output-format=github"]
-fmt = ["ruff check . --output-format=github --fix"]
+# [tool.hatch.envs.style]
+# detached = true
+# dependencies = ["ruff"]
+
+# [tool.hatch.envs.style.scripts]
+# check = ["ruff check . --output-format=github"]
+# fmt = ["ruff check . --output-format=github --fix"]

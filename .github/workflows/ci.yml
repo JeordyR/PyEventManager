@@ -8,10 +8,6 @@ on:
     branches:
       - main
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: jeordyr/sidekick
-
 permissions:
   issues: read
   checks: write
@@ -27,18 +23,18 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install hatch
+          pip install uv
 
       - name: Lint
-        run: hatch run style:check
+        run: make lint
 
       - name: Test
         id: test
-        run: hatch run test-report
+        run: make test-report
       - name: Publish pytest test results to PR
         if: always() && github.event_name == 'pull_request'
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -76,18 +72,21 @@ jobs:
     needs: release
     if: needs.release.outputs.release_created
     runs-on: ubuntu-latest
+    env:
+      UV_PUBLISH_USERNAME: ${{ secrets.PYPI_USERNAME }}
+      UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install hatch
+          pip install uv
       - name: Build
-        run: hatch build
+        run: make build
       - name: Publish
-        run: hatch publish -u ${{ secrets.PYPI_USERNAME }} -a ${{ secrets.PYPI_PASSWORD }}
+        run: make publish

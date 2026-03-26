@@ -1,5 +1,7 @@
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Protocol
+
+from event_manager.models import EventModel
 
 
 class QueueInterface(Protocol):
@@ -13,10 +15,10 @@ class QueueInterface(Protocol):
         """Return the length of the queue."""
         ...
 
-    def get_all(self) -> list[Any]:
+    def get_all(self) -> list[EventModel]:
         """Get and return all items from the queue."""
         ...
 
-    def put(self, data):
+    def put(self, event: EventModel):
         """Put an item into the queue and update the last_updated attribute with current time."""
         ...
