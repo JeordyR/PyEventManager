@@ -39,7 +39,7 @@ class EventManager:
             for item in event:
                 if isinstance(item, str):
                     events.append(item)
-                elif isinstance(item, EventModel):
+                elif issubclass(item, EventModel):
                     events.append(item.__event_name__)
                 else:
                     raise TypeError(f"{type(item)} is not a supported type for event definition.")
@@ -76,7 +76,7 @@ class EventManager:
             for item in event:
                 if isinstance(item, str):
                     events.append(item)
-                elif isinstance(item, EventModel):
+                elif issubclass(item, EventModel):
                     events.append(item.__event_name__)
                 else:
                     raise TypeError(f"{type(item)} is not a supported type for event definition.")
