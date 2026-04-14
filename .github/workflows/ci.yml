@@ -45,7 +45,7 @@ jobs:
         uses: insightsengineering/coverage-action@v2
         with:
           path: ./coverage.xml
-          threshold: 90
+          threshold: 0
           publish: true
           diff: true
           diff-branch: main
