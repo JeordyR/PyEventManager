@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.7](https://github.com/JeordyR/PyEventManager/compare/v0.5.6...v0.5.7) (2026-04-14)
+
+
+### Bug Fixes
+
+* Instance to subclass check for list of EventModel in subscriptions ([#22](https://github.com/JeordyR/PyEventManager/issues/22)) ([465f14c](https://github.com/JeordyR/PyEventManager/commit/465f14c135119a0833c6afa1825473a5fac0a598))
+
 ## [0.5.6](https://github.com/JeordyR/PyEventManager/compare/v0.5.5...v0.5.6) (2024-04-07)
 
 
