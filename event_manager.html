@@ -960,7 +960,7 @@ Defaults to ThreadQueue.</li>
     <a class="headerlink" href="#ThreadQueue"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="ThreadQueue-8"><a href="#ThreadQueue-8"><span class="linenos"> 8</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ThreadQueue</span><span class="p">(</span><span class="n">Queue</span><span class="p">):</span>
 </span><span id="ThreadQueue-9"><a href="#ThreadQueue-9"><span class="linenos"> 9</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="ThreadQueue-10"><a href="#ThreadQueue-10"><span class="linenos">10</span></a><span class="sd">    Multithreading FIFO Queue modified to track when the queue was last updated.</span>
+</span><span id="ThreadQueue-10"><a href="#ThreadQueue-10"><span class="linenos">10</span></a><span class="sd">    Multithreading FIFO Queue modified to track when the queue was last updated</span>
 </span><span id="ThreadQueue-11"><a href="#ThreadQueue-11"><span class="linenos">11</span></a><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="ThreadQueue-12"><a href="#ThreadQueue-12"><span class="linenos">12</span></a>
 </span><span id="ThreadQueue-13"><a href="#ThreadQueue-13"><span class="linenos">13</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -993,7 +993,7 @@ Defaults to ThreadQueue.</li>
 </span></pre></div>
 
 
-            <div class="docstring"><p>Multithreading FIFO Queue modified to track when the queue was last updated.</p>
+            <div class="docstring"><p>Multithreading FIFO Queue modified to track when the queue was last updated</p>
 </div>
 
 
@@ -1122,8 +1122,10 @@ Defaults to ThreadQueue.</li>
 <li><strong>__pydantic_custom_init__:</strong>  Whether the model has a custom <code>__init__</code> function.</li>
 <li><strong>__pydantic_decorators__:</strong>  Metadata containing the decorators defined on the model.
 This replaces <code>Model.__validators__</code> and <code>Model.__root_validators__</code> from Pydantic V1.</li>
-<li><strong>__pydantic_generic_metadata__:</strong>  Metadata for generic models; contains data used for a similar purpose to
-__args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.</li>
+<li><strong>__pydantic_generic_metadata__:</strong>  A dictionary containing metadata about generic Pydantic models.
+The <code>origin</code> and <code>args</code> items map to the [<code>__origin__</code>][genericalias.__origin__]
+and [<code>__args__</code>][genericalias.__args__] attributes of [generic aliases][types-genericalias],
+and the <code>parameter</code> item maps to the <code>__parameter__</code> attribute of generic classes.</li>
 <li><strong>__pydantic_parent_namespace__:</strong>  Parent namespace of the model, used for automatic rebuilding of models.</li>
 <li><strong>__pydantic_post_init__:</strong>  The name of the post-init method for the model, if defined.</li>
 <li><strong>__pydantic_root_model__:</strong>  Whether the model is a [<code>RootModel</code>][pydantic.root_model.RootModel].</li>
