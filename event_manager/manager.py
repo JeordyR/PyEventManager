@@ -8,7 +8,6 @@ import logging
 from collections.abc import Callable
 from concurrent.futures import Future
 from datetime import timedelta
-from functools import wraps
 from typing import Any
 
 from event_manager.listeners.batch import BatchListener
