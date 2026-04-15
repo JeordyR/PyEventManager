@@ -1,0 +1,46 @@
+name: Scheduled Dependency Update
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Update uv.lock
+        run: uv lock --upgrade
+
+      - name: Determine Commit Message
+        id: msg
+        run: |
+          # Check if pyproject.toml was changed
+          if git diff --name-only | grep -q "pyproject.toml"; then
+            echo "prefix=fix(deps)" >> $GITHUB_OUTPUT
+            echo "body=Detected changes in pyproject.toml constraints. Triggering a new release." >> $GITHUB_OUTPUT
+          else
+            echo "prefix=chore(deps)" >> $GITHUB_OUTPUT
+            echo "body=Only uv.lock updated. No new release will be triggered." >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "${{ steps.msg.outputs.prefix }}: update dependencies"
+          title: "${{ steps.msg.outputs.prefix }}: weekly dependency update"
+          body: "${{ steps.msg.outputs.body }}"
+          branch: "automated-dependency-update"
+          delete-branch: true
+
+      - name: Enable auto-merge
+        if: steps.cpr.outputs.pull-request-number != ''
+        run: gh pr merge --auto --squash "${{ steps.cpr.outputs.pull-request-number }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

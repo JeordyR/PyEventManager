@@ -1,0 +1,50 @@
+name: Testing and Linting
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  issues: read
+  checks: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        id: test
+        run: make test-report
+
+      - name: Publish pytest test results to PR
+        if: always() && github.event_name == 'pull_request'
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: junit/test-results.xml
+
+      - name: Publish coverage results to PR
+        if: always() && github.event_name == 'pull_request'
+        uses: insightsengineering/coverage-action@v2
+        with:
+          path: ./coverage.xml
+          threshold: 0
+          publish: true
+          diff: true
+          diff-branch: main
+          diff-storage: _xml_coverage_reports
+          coverage-summary-title: "Code Coverage Summary"

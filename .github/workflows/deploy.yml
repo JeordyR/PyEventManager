@@ -1,0 +1,24 @@
+name: Deploy to PyPI
+
+on:
+  release:
+    types: [published] # Triggers only when a new GitHub release is created
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      UV_PUBLISH_USERNAME: ${{ secrets.PYPI_USERNAME }}
+      UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build package
+        run: make build
+
+      - name: Publish to PyPI
+        run: make publish
+
