@@ -32,7 +32,7 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_TOKEN }}
           commit-message: "${{ steps.msg.outputs.prefix }}: update dependencies"
           title: "${{ steps.msg.outputs.prefix }}: weekly dependency update"
           body: "${{ steps.msg.outputs.body }}"
