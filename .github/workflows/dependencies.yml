@@ -1,8 +1,15 @@
 name: Scheduled Dependency Update
+
 on:
   schedule:
     - cron: '0 0 * * 1'
   workflow_dispatch:
+
+permissions:
+  issues: read
+  contents: write
+  pull-requests: write
+  actions: write
 
 jobs:
   update-deps:
