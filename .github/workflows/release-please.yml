@@ -23,6 +23,6 @@ jobs:
 
       - name: Enable auto-merge for Release PR
         if: ${{ steps.release.outputs.pr }}
-        run: gh pr merge --auto --squash "${{ steps.release.outputs.pr }}"
+        run: gh pr merge --auto --squash "${{ steps.release.outputs.pr.headBranchName }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
