@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/JeordyR/PyEventManager/compare/v0.5.7...v0.6.0) (2026-04-15)
+
+
+### Features
+
+* Rework to use threading for gil-free python ([#24](https://github.com/JeordyR/PyEventManager/issues/24)) ([5c5d62b](https://github.com/JeordyR/PyEventManager/commit/5c5d62bb3f2a1ffb2682d516a5a8a849106f3c77))
+
 ## [0.5.7](https://github.com/JeordyR/PyEventManager/compare/v0.5.6...v0.5.7) (2026-04-14)
 
 
