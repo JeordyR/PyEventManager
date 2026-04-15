@@ -1,6 +1,6 @@
 [project]
 name = "pyeventmanager"
-version = "0.6.0"
+version = "0.6.1"
 authors = [{ name = "Jeordy", email = "JeordyR@users.noreply.github.com" }]
 description = "Pydantic-based event management system for Python."
 readme = "README.md"
