@@ -6,7 +6,7 @@ from event_manager.models import EventModel
 
 class ThreadQueue(Queue):
     """
-    Multithreading FIFO Queue modified to track when the queue was last updated
+    Multithreading FIFO Queue modified to track when the queue was last updated.
     """
 
     def __init__(self, *args, **kwargs):
