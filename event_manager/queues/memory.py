@@ -1,18 +1,17 @@
 from datetime import datetime
-from multiprocessing import get_context
-from multiprocessing.queues import Queue as ProcessingQueueBase
+from queue import Queue
 
 from event_manager.models import EventModel
 
 
-class ProcessQueue(ProcessingQueueBase):
+class ThreadQueue(Queue):
     """
-    Multiprocessing FIFO Queue modified to track when the queue was last updated.
+    Multithreading FIFO Queue modified to track when the queue was last updated.
     """
 
     def __init__(self, *args, **kwargs):
         self.last_updated: datetime | None = None
-        super().__init__(*args, **kwargs, ctx=get_context())
+        super().__init__(*args, **kwargs)
 
     def __len__(self):
         """Return the length of the queue."""
