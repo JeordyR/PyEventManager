@@ -16,7 +16,7 @@ from event_manager.listeners.scheduled import ScheduledListener
 from event_manager.listeners.simple import Listener
 from event_manager.models import EventModel, T
 from event_manager.queues.base import QueueInterface
-from event_manager.queues.memory import ProcessQueue
+from event_manager.queues.memory import ThreadQueue
 from event_manager.tree import Tree
 
 logger = logging.getLogger("event_manager")
@@ -31,6 +31,15 @@ class EventManager:
         cls,
         event: list[str] | str | type[T] | list[type[T]],
     ) -> Callable[[Callable[[T], Any]], Callable[[T], Any]]:
+        """
+        Registers a function that will run immediately on any matched event.
+
+        Args:
+            event (list[str] | str | type[T] | list[type[T]]): Event(s) to match on.
+
+        Returns:
+            Callable[[Callable[[T], Any]], Callable[[T], Any]]: Returns the registered function.
+        """
         events = []
 
         if isinstance(event, str):
@@ -49,13 +58,11 @@ class EventManager:
             raise TypeError(f"{type(item)} is not a supported type for event definition.")
 
         def decorator(func: Callable[[T], Any]) -> Callable[[T], Any]:
-            @wraps(func)
-            def wrapper(input: T) -> Any:
-                for e in events:
-                    logger.info(f"Registered function {func.__name__} to run on {e} event.")
-                    cls._event_tree.add_listener(node_name=e, listener=Listener(func=func, event=e))
+            for e in events:
+                logger.info(f"Registered function {func.__name__} to run on {e} event.")
+                cls._event_tree.add_listener(node_name=e, listener=Listener(func=func, event=e))
 
-            return wrapper
+            return func
 
         return decorator
 
@@ -66,8 +73,25 @@ class EventManager:
         batch_count: int = 0,
         batch_idle_window: int = 0,
         batch_window: int = 30,
-        queue_type: type[QueueInterface] = ProcessQueue,
+        queue_type: type[QueueInterface] = ThreadQueue,
     ) -> Callable[[Callable[[list[T]], Any]], Callable[[list[T]], Any]]:
+        """
+        Registers a function that will batch up events and only execute when the configured conditions have been met.
+
+        Args:
+            event (list[str] | str | type[T] | list[type[T]]): Event(s) to match on.
+            batch_count (int, optional): How many events to batch up before processing events.
+                If this limit is hit, the batch will be processed immediately. Defaults to 0.
+            batch_idle_window (int, optional): When greater than zero, will wait for this many seconds of no new events
+                before processing the batch. Defaults to 0.
+            batch_window (int, optional): If greater than zero, will process the batch when this many seconds have
+                passed since the first event was added to the batch. Overrides `batch_idle_window`. Defaults to 30.
+            queue_type (type[QueueInterface], optional): Type of queue to use when batching up events.
+                Defaults to ThreadQueue.
+
+        Returns:
+            Callable[[Callable[[list[T]], Any]], Callable[[list[T]], Any]]: Returns the registered function.
+        """
         events = []
 
         if isinstance(event, str):
@@ -86,23 +110,21 @@ class EventManager:
             raise TypeError(f"{type(item)} is not a supported type for event definition.")
 
         def decorator(func: Callable[[list[T]], Any]) -> Callable[[list[T]], Any]:
-            @wraps(func)
-            def wrapper(input: list[T]) -> Any:
-                for e in events:
-                    logger.info(f"Registered function {func.__name__} to run on {e} event.")
-                    cls._event_tree.add_listener(
-                        node_name=e,
-                        listener=BatchListener(
-                            event=e,
-                            func=func,
-                            batch_count=batch_count,
-                            batch_idle_window=batch_idle_window,
-                            batch_window=batch_window,
-                            queue_type=queue_type,
-                        ),
-                    )
+            for e in events:
+                logger.info(f"Registered function {func.__name__} to run on {e} event.")
+                cls._event_tree.add_listener(
+                    node_name=e,
+                    listener=BatchListener(
+                        event=e,
+                        func=func,
+                        batch_count=batch_count,
+                        batch_idle_window=batch_idle_window,
+                        batch_window=batch_window,
+                        queue_type=queue_type,
+                    ),
+                )
 
-            return wrapper
+            return func
 
         return decorator
 
@@ -116,19 +138,18 @@ class EventManager:
 
         Args:
             interval (timedelta): Timedelta object specifying the interval to run the function
+
         Returns:
-            Callable: Returns the registered function, for use in decorators.
+            Callable[[Callable[[], None]], Callable[[], None]]: _description_
         """
 
         def decorator(func: Callable[[], None]) -> Callable[[], None]:
-            @wraps(func)
-            def wrapper():
-                logger.info(f"Scheduling {func.__name__} to run every {interval.total_seconds()} seconds.")
-                listener = ScheduledListener(interval=interval, func=func)
-                listener()
-                cls._scheduled_listeners.append(listener)
+            logger.info(f"Scheduling {func.__name__} to run every {interval.total_seconds()} seconds.")
+            listener = ScheduledListener(interval=interval, func=func)
+            listener()
+            cls._scheduled_listeners.append(listener)
 
-            return wrapper
+            return func
 
         return decorator
 

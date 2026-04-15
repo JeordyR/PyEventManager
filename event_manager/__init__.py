@@ -2,8 +2,8 @@
 .. include:: ../README.md
 """
 
-__all__ = ["EventManager", "QueueInterface", "ProcessQueue", "EventModel"]
+__all__ = ["EventManager", "QueueInterface", "ThreadQueue", "EventModel"]
 from .manager import EventManager
 from .models import EventModel
 from .queues.base import QueueInterface
-from .queues.memory import ProcessQueue
+from .queues.memory import ThreadQueue
