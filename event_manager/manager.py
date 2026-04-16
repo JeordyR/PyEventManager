@@ -59,7 +59,7 @@ class EventManager:
         def decorator(func: Callable[[T], Any]) -> Callable[[T], Any]:
             for e in events:
                 logger.info(f"Registered function {func.__name__} to run on {e} event.")
-                cls._event_tree.add_listener(node_name=e, listener=Listener(func=func, event=e))
+                cls._event_tree.add_listener(node_name=e, listener=Listener(func=func))
 
             return func
 
@@ -73,7 +73,7 @@ class EventManager:
         batch_idle_window: int = 0,
         batch_window: int = 30,
         queue_type: type[QueueInterface] = ThreadQueue,
-    ) -> Callable[[Callable[[list[T]], Any]], Callable[[list[T]], Any]]:
+    ) -> Callable[[Callable[[list[EventModel]], Any]], Callable[[list[EventModel]], Any]]:
         """
         Registers a function that will batch up events and only execute when the configured conditions have been met.
 
@@ -108,20 +108,20 @@ class EventManager:
         else:
             raise TypeError(f"{type(item)} is not a supported type for event definition.")
 
-        def decorator(func: Callable[[list[T]], Any]) -> Callable[[list[T]], Any]:
+        events = list(dict.fromkeys(events))
+
+        def decorator(func: Callable[[list[EventModel]], Any]) -> Callable[[list[EventModel]], Any]:
+            listener = BatchListener(
+                func=func,
+                batch_count=batch_count,
+                batch_idle_window=batch_idle_window,
+                batch_window=batch_window,
+                queue_type=queue_type,
+            )
+
             for e in events:
                 logger.info(f"Registered function {func.__name__} to run on {e} event.")
-                cls._event_tree.add_listener(
-                    node_name=e,
-                    listener=BatchListener(
-                        event=e,
-                        func=func,
-                        batch_count=batch_count,
-                        batch_idle_window=batch_idle_window,
-                        batch_window=batch_window,
-                        queue_type=queue_type,
-                    ),
-                )
+                cls._event_tree.add_listener(node_name=e, listener=listener)
 
             return func
 
@@ -171,7 +171,7 @@ class EventManager:
         else:
             raise TypeError(f"{type(event)} is not a supported type for event definition.")
 
-        return [listener.func for listener in cls._event_tree.find_listeners(event_name)]
+        return [listener for listener in cls._event_tree.find_listeners(event_name)]
 
     @classmethod
     def emit(cls, event: EventModel) -> list[Future]:

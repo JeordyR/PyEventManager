@@ -7,7 +7,7 @@ from threading import Thread
 from typing import Any
 
 from event_manager.listeners.base import _wrapper
-from event_manager.models import EventModel, T
+from event_manager.models import EventModel
 from event_manager.queues.base import QueueInterface
 from event_manager.queues.memory import ThreadQueue
 
@@ -69,8 +69,7 @@ class BatchListener:
 
     def __init__(
         self,
-        event: str | type[EventModel],
-        func: Callable[[list[T]], Any],
+        func: Callable[[list[EventModel]], Any],
         batch_count: int,
         batch_idle_window: int,
         batch_window: int,
@@ -95,7 +94,6 @@ class BatchListener:
             queue_type (type[QueueInterface], optional): Type of queue to use when batching up events.
                 Defaults to ThreadQueue.
         """
-        self.event = event
         self.batch_count = batch_count
         self.batch_idle_window = batch_idle_window
         self.batch_window = batch_window
@@ -109,7 +107,7 @@ class BatchListener:
         """
         Creates a new thread in the object to use for a new invocation of the listener.
         """
-        logger.debug(f"Spawning a new process for func: {self.func.__name__}")
+        logger.debug(f"Spawning a new thread for func: {self.func.__name__}")
         self.future = Future()
         self.thread = Thread(
             target=_wrapper,
