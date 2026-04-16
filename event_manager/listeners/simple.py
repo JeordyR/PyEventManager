@@ -13,7 +13,7 @@ T = TypeVar("T", bound=EventModel)
 
 
 class Listener:
-    def __init__(self, event: str | type[EventModel], func: Callable[[T], Any]):
+    def __init__(self, func: Callable[[T], Any]):
         """
         Class for a basic listener in the event management system.
 
@@ -21,7 +21,6 @@ class Listener:
             event (str): Event to match on.
             func (Callable): Function to call when listener triggers on a matching event.
         """
-        self.event = event
         self.func = func
 
     def __call__(self, event: EventModel) -> Future:

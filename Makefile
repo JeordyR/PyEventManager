@@ -9,7 +9,7 @@ publish:
 	uv publish
 
 test:
-	uv run --group test pytest "$(test_pattern)"
+	uv run --group test pytest "$(test_pattern)" --cov=event_manager
 
 test-report:
 	uv run --group test pytest --doctest-modules --junit-xml=junit/test-results.xml --cov=event_manager --cov-report=xml --cov-report=html
