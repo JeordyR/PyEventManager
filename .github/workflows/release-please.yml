@@ -21,6 +21,10 @@ jobs:
           token: ${{ secrets.RELEASE_TOKEN }}
           release-type: python
 
+      - name: Checkout
+        if: ${{ steps.release.outputs.pr }}
+        uses: actions/checkout@v4
+
       - name: Enable auto-merge for Release PR
         if: ${{ steps.release.outputs.pr }}
         run: gh pr merge --auto --squash "$PR_NUMBER"
