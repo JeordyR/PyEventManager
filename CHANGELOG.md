@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/JeordyR/PyEventManager/compare/v0.6.1...v0.6.2) (2026-04-16)
+
+
+### Bug Fixes
+
+* Add tests ([#36](https://github.com/JeordyR/PyEventManager/issues/36)) ([ff61d52](https://github.com/JeordyR/PyEventManager/commit/ff61d52278634d6fd5e528b5faae3cee7faf2a05))
+
 ## [0.6.1](https://github.com/JeordyR/PyEventManager/compare/v0.6.0...v0.6.1) (2026-04-15)
 
 
