@@ -89,6 +89,9 @@ select = [
 ]
 ignore = ["B006"]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ALL"]
+
 
 # [tool.hatch.envs.style]
 # detached = true
