@@ -1,6 +1,7 @@
 import time
 import unittest
 from datetime import timedelta
+from unittest.mock import patch
 
 from event_manager import EventManager, EventModel
 from event_manager.tree import Tree
@@ -26,6 +27,7 @@ class TestEventManager(unittest.TestCase):
     def setUp(self):
         EventManager._event_tree = Tree()
         EventManager._scheduled_listeners = []
+        EventManager._scheduled_started = False
         self.recorded = []
 
     def test_on_registers_listener_and_emit(self):
@@ -178,16 +180,46 @@ class TestEventManager(unittest.TestCase):
         with self.assertRaises(Exception):
             EventManager.on_batch(_NotAnEvent, batch_count=1)
 
-    def test_schedule_decorator_registers_and_runs(self):
-        """Covers manager.py lines 145-153 and scheduled.py lines 52-60."""
+    def test_schedule_registers_and_start_stop_scheduled(self):
+        """Covers the manager-driven scheduled lifecycle."""
 
         @EventManager.schedule(interval=timedelta(seconds=100))
         def background_task():
-            pass
+            self.recorded.append("ran")
 
         self.assertEqual(1, len(EventManager._scheduled_listeners))
-        # Clean up the daemon process
-        EventManager._scheduled_listeners[0].stop()
+
+        with (
+            patch("event_manager.manager.ScheduledListener.__call__", autospec=True) as start_mock,
+            patch("event_manager.manager.ScheduledListener.stop", autospec=True) as stop_mock,
+        ):
+            EventManager.start_scheduled()
+            self.assertTrue(EventManager._scheduled_started)
+            start_mock.assert_called_once()
+
+            EventManager.start_scheduled()
+            start_mock.assert_called_once()
+
+            EventManager.stop_scheduled()
+            self.assertFalse(EventManager._scheduled_started)
+            stop_mock.assert_called_once()
+
+    def test_start_scheduled_rebuilds_stopped_listener_before_restart(self):
+        @EventManager.schedule(interval=timedelta(seconds=100))
+        def background_task():
+            self.recorded.append("ran")
+
+        original_listener = EventManager._scheduled_listeners[0]
+        original_listener.stop()
+
+        with patch("event_manager.manager.ScheduledListener.__call__", autospec=True) as start_mock:
+            EventManager.start_scheduled()
+
+        restarted_listener = EventManager._scheduled_listeners[0]
+        self.assertIsNot(restarted_listener, original_listener)
+        self.assertIs(restarted_listener.func, background_task)
+        self.assertEqual(restarted_listener.interval, timedelta(seconds=100))
+        start_mock.assert_called_once()
 
     def test_listeners_with_invalid_type_raises(self):
         """Covers manager.py line 172: listeners() raises TypeError for unsupported type."""
