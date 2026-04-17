@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.3](https://github.com/JeordyR/PyEventManager/compare/v0.6.2...v0.6.3) (2026-04-17)
+
+
+### Bug Fixes
+
+* fix release ([#40](https://github.com/JeordyR/PyEventManager/issues/40)) ([db90f82](https://github.com/JeordyR/PyEventManager/commit/db90f829b2970a9ac17a719f6594096432e56d94))
+
 ## [0.6.2](https://github.com/JeordyR/PyEventManager/compare/v0.6.1...v0.6.2) (2026-04-16)
 
 
