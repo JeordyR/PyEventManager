@@ -3,6 +3,7 @@ from datetime import timedelta
 from multiprocessing import Event as MultiprocessingEvent
 from threading import Thread
 from time import sleep
+from unittest.mock import patch
 
 from event_manager import EventModel
 from event_manager.listeners.scheduled import ScheduledListener, run
@@ -53,13 +54,20 @@ class TestListeners(unittest.TestCase):
 
     def test_scheduled_listener_call_spawns_process(self):
         """Covers scheduled.py lines 52-60: ScheduledListener.__call__ starts a daemon process."""
-        called = []
 
         def task():
-            called.append(True)
+            return None
 
         listener = ScheduledListener(interval=timedelta(seconds=100), func=task)
-        listener()  # spawns a daemon process
 
-        # Stop the process immediately; it was daemon so it gets cleaned up automatically
-        listener.stop()
+        with patch("event_manager.listeners.scheduled.Process") as process_cls:
+            listener()
+
+        process_cls.assert_called_once()
+        _, kwargs = process_cls.call_args
+        self.assertIs(kwargs["target"], run)
+        self.assertTrue(kwargs["daemon"])
+        self.assertEqual(listener.interval, kwargs["kwargs"]["_interval"])
+        self.assertIs(listener.func, kwargs["kwargs"]["_func"])
+        self.assertIs(listener.sync_event, kwargs["kwargs"]["_event"])
+        process_cls.return_value.start.assert_called_once_with()

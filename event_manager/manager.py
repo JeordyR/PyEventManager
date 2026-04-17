@@ -24,6 +24,7 @@ logger = logging.getLogger("event_manager")
 class EventManager:
     _event_tree = Tree()
     _scheduled_listeners: list[ScheduledListener] = []
+    _scheduled_started = False
 
     @classmethod
     def on(
@@ -139,15 +140,12 @@ class EventManager:
             interval (timedelta): Timedelta object specifying the interval to run the function
 
         Returns:
-            Callable[[Callable[[], None]], Callable[[], None]]: _description_
+            Callable[[Callable[[], None]], Callable[[], None]]: Returns the registered function.
         """
 
         def decorator(func: Callable[[], None]) -> Callable[[], None]:
             logger.info(f"Scheduling {func.__name__} to run every {interval.total_seconds()} seconds.")
-            listener = ScheduledListener(interval=interval, func=func)
-            listener()
-            cls._scheduled_listeners.append(listener)
-
+            cls._scheduled_listeners.append(ScheduledListener(interval=interval, func=func))
             return func
 
         return decorator
@@ -205,3 +203,30 @@ class EventManager:
                 logger.error(e)
 
         return futures
+
+    @classmethod
+    def start_scheduled(cls) -> None:
+        """
+        Start all scheduled listeners.
+        """
+        if cls._scheduled_started:
+            return
+
+        for idx, listener in enumerate(cls._scheduled_listeners):
+            sync_event = getattr(listener, "sync_event", None)
+            if sync_event is not None and sync_event.is_set():
+                listener = ScheduledListener(interval=listener.interval, func=listener.func)
+                cls._scheduled_listeners[idx] = listener
+            listener()
+
+        cls._scheduled_started = True
+
+    @classmethod
+    def stop_scheduled(cls) -> None:
+        """
+        Stop all scheduled listeners
+        """
+        for listener in cls._scheduled_listeners:
+            listener.stop()
+
+        cls._scheduled_started = False
